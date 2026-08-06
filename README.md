@@ -18,3 +18,13 @@
   - Complaint Management
   - Status Updates
   - Complaint Tracking
+    
+* **Shamiha Asmi (Backend):**
+  - Authentication
+  - Citizen Management
+  - Department Management
+
+* **Sanjana Nitnware (Backend):**
+  - Citizen Complaint Management
+  - Admin Complaint Management
+  - Dashboard
