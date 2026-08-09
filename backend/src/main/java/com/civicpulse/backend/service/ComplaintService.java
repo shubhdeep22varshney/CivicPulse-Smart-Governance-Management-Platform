@@ -26,10 +26,22 @@ public class ComplaintService {
     public List<Complaint> getAllComplaints() {
         return complaintRepository.findAll();
     }
+
     // Get complaint by citizen id
     public List<Complaint> getComplaintsByCitizenId(Long citizenId) {
-    return complaintRepository.findByCitizenId(citizenId);
+        return complaintRepository.findByCitizenId(citizenId);
     }
+    // Get complaints by status
+
+    public List<Complaint> getComplaintsByStatus(String status) {
+        return complaintRepository.findByStatus(status);
+    }
+// Get complaints by priority
+
+    public List<Complaint> getComplaintsByPriority(String priority) {
+        return complaintRepository.findByPriority(priority);
+    }
+
     // Get complaint by ID
     public Optional<Complaint> getComplaintById(Long id) {
         return complaintRepository.findById(id);
@@ -55,5 +67,32 @@ public class ComplaintService {
     // Delete complaint
     public void deleteComplaint(Long id) {
         complaintRepository.deleteById(id);
+    }
+
+    public Complaint updateComplaintStatus(Long id, String status) {
+        Complaint complaint = complaintRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Complaint not found"));
+
+        complaint.setStatus(status);
+
+        return complaintRepository.save(complaint);
+    }
+
+    public Complaint assignDepartment(Long id, Long departmentId) {
+        Complaint complaint = complaintRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Complaint not found"));
+
+        complaint.setDepartmentId(departmentId);
+
+        return complaintRepository.save(complaint);
+    }
+
+    public Complaint resolveComplaint(Long id) {
+        Complaint complaint = complaintRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Complaint not found"));
+
+        complaint.setStatus("RESOLVED");
+
+        return complaintRepository.save(complaint);
     }
 }

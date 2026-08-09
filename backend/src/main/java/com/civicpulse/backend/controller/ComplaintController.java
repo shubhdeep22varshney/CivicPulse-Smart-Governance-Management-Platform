@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.civicpulse.backend.entity.Complaint;
@@ -65,6 +66,26 @@ public class ComplaintController {
                 complaintService.getComplaintsByCitizenId(citizenId)
         );
     }
+    // Get complaints by status
+
+    @GetMapping("/status/{status}")
+    public ResponseEntity<List<Complaint>> getComplaintsByStatus(
+            @PathVariable String status) {
+
+        return ResponseEntity.ok(
+                complaintService.getComplaintsByStatus(status)
+        );
+    }
+
+    // Get complaints by priority
+    @GetMapping("/priority/{priority}")
+    public ResponseEntity<List<Complaint>> getComplaintsByPriority(
+            @PathVariable String priority) {
+
+        return ResponseEntity.ok(
+                complaintService.getComplaintsByPriority(priority)
+        );
+    }
 
     // Update complaint
     @PutMapping("/{id}")
@@ -74,6 +95,38 @@ public class ComplaintController {
 
         return ResponseEntity.ok(
                 complaintService.updateComplaint(id, complaint)
+        );
+    }
+    // Update complaint status
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<Complaint> updateComplaintStatus(
+            @PathVariable Long id,
+            @RequestParam String status) {
+
+        return ResponseEntity.ok(
+                complaintService.updateComplaintStatus(id, status)
+        );
+    }
+    // Assign complaint to department
+
+    @PutMapping("/{id}/department")
+    public ResponseEntity<Complaint> assignDepartment(
+            @PathVariable Long id,
+            @RequestParam Long departmentId) {
+
+        return ResponseEntity.ok(
+                complaintService.assignDepartment(id, departmentId)
+        );
+    }
+    // Resolve complaint
+
+    @PutMapping("/{id}/resolve")
+    public ResponseEntity<Complaint> resolveComplaint(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                complaintService.resolveComplaint(id)
         );
     }
 
