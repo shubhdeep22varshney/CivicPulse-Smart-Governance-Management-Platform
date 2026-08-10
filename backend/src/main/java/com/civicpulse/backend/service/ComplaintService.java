@@ -31,8 +31,13 @@ public class ComplaintService {
     public List<Complaint> getComplaintsByCitizenId(Long citizenId) {
         return complaintRepository.findByCitizenId(citizenId);
     }
-    // Get complaints by status
 
+    // Get complaints by department id
+    public List<Complaint> getComplaintsByDepartmentId(Long departmentId) {
+        return complaintRepository.findByDepartmentId(departmentId);
+    }
+
+    // Get complaints by status
     public List<Complaint> getComplaintsByStatus(String status) {
         return complaintRepository.findByStatus(status);
     }

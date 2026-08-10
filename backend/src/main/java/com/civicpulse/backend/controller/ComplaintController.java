@@ -66,6 +66,17 @@ public class ComplaintController {
                 complaintService.getComplaintsByCitizenId(citizenId)
         );
     }
+
+    // Get complaints by department ID
+    @GetMapping("/department/{departmentId}")
+    public ResponseEntity<List<Complaint>> getComplaintsByDepartmentId(
+            @PathVariable Long departmentId) {
+
+        return ResponseEntity.ok(
+                complaintService.getComplaintsByDepartmentId(departmentId)
+        );
+    }
+
     // Get complaints by status
 
     @GetMapping("/status/{status}")
