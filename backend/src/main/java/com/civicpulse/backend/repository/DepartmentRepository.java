@@ -9,4 +9,6 @@ import com.civicpulse.backend.entity.Department;
 public interface DepartmentRepository extends JpaRepository<Department, Long> {
 
     Optional<Department> findByUserId(Long userId);
+
+    Optional<Department> findByDepartmentNameContainingIgnoreCase(String departmentName);
 }

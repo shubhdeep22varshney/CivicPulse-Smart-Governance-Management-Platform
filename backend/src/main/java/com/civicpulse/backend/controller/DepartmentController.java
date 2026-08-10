@@ -1,10 +1,12 @@
 package com.civicpulse.backend.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.civicpulse.backend.entity.Complaint;
 import com.civicpulse.backend.entity.Department;
 import com.civicpulse.backend.service.DepartmentService;
 
@@ -41,6 +43,16 @@ public class DepartmentController {
         return departmentService.getDepartmentByUserId(userId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}/complaints")
+    public ResponseEntity<List<Complaint>> getDepartmentComplaints(@PathVariable Long id) {
+        return ResponseEntity.ok(departmentService.getDepartmentComplaints(id));
+    }
+
+    @GetMapping("/{id}/stats")
+    public ResponseEntity<Map<String, Object>> getDepartmentStats(@PathVariable Long id) {
+        return ResponseEntity.ok(departmentService.getDepartmentStats(id));
     }
 
     @PutMapping("/{id}")
