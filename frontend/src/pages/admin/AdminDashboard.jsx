@@ -1,26 +1,71 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../../styles/AdminDashboard.css";
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
+
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch("http://localhost:8081/api/dashboard/stats")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch dashboard data");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        setDashboardData(data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Dashboard API error:", error);
+        setError("Unable to load dashboard data");
+        setLoading(false);
+      });
+  }, []);
+
+  const getStatusClass = (status) => {
+    switch (status) {
+      case "Resolved":
+        return "status resolved";
+      case "In Progress":
+        return "status progress";
+      default:
+        return "status pending";
+    }
+  };
+
+  if (loading) {
+    return <div className="admin-dashboard">Loading dashboard...</div>;
+  }
+
+  if (error) {
+    return <div className="admin-dashboard">{error}</div>;
+  }
+
   const stats = [
     {
       title: "Total Complaints",
-      value: "248",
+      value: dashboardData?.totalComplaints ?? 0,
       description: "All complaints received",
     },
     {
       title: "Pending",
-      value: "72",
+      value: dashboardData?.pendingComplaints ?? 0,
       description: "Waiting for action",
     },
     {
       title: "In Progress",
-      value: "96",
+      value: dashboardData?.inProgressComplaints ?? 0,
       description: "Currently being handled",
     },
     {
       title: "Resolved",
-      value: "80",
+      value: dashboardData?.resolvedComplaints ?? 0,
       description: "Successfully resolved",
     },
   ];
@@ -52,19 +97,10 @@ const AdminDashboard = () => {
     },
   ];
 
-  const getStatusClass = (status) => {
-    switch (status) {
-      case "Resolved":
-        return "status resolved";
-      case "In Progress":
-        return "status progress";
-      default:
-        return "status pending";
-    }
-  };
-
   return (
     <div className="admin-dashboard">
+
+      {/* Header */}
       <div className="dashboard-header">
         <div>
           <h1>Admin Dashboard</h1>
@@ -73,6 +109,7 @@ const AdminDashboard = () => {
 
         <div className="admin-profile">
           <span className="profile-icon">A</span>
+
           <div>
             <strong>Administrator</strong>
             <small>Admin</small>
@@ -80,16 +117,22 @@ const AdminDashboard = () => {
         </div>
       </div>
 
+      {/* Stats */}
       <section className="stats-grid">
         {stats.map((stat) => (
           <div className="stat-card" key={stat.title}>
             <h3>{stat.title}</h3>
-            <div className="stat-value">{stat.value}</div>
+
+            <div className="stat-value">
+              {stat.value}
+            </div>
+
             <p>{stat.description}</p>
           </div>
         ))}
       </section>
 
+      {/* Recent Complaints */}
       <section className="dashboard-section">
         <div className="section-header">
           <div>
@@ -97,7 +140,12 @@ const AdminDashboard = () => {
             <p>Latest complaints submitted by citizens</p>
           </div>
 
-          <button className="view-all-btn">View All</button>
+          <button
+            className="view-all-btn"
+            onClick={() => navigate("/admin/complaints")}
+          >
+            View All
+          </button>
         </div>
 
         <div className="table-container">
@@ -129,15 +177,33 @@ const AdminDashboard = () => {
         </div>
       </section>
 
+      {/* Quick Actions */}
       <section className="quick-actions">
         <h2>Quick Actions</h2>
 
         <div className="action-grid">
-          <button>Manage Complaints</button>
-          <button>Update Status</button>
-          <button>Track Complaints</button>
+
+          <button
+            onClick={() => navigate("/admin/complaints")}
+          >
+            Manage Complaints
+          </button>
+
+          <button
+            onClick={() => navigate("/admin/status")}
+          >
+            Update Status
+          </button>
+
+          <button
+            onClick={() => navigate("/admin/tracking")}
+          >
+            Track Complaints
+          </button>
+
         </div>
       </section>
+
     </div>
   );
 };

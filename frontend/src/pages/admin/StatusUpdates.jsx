@@ -6,8 +6,9 @@ const StatusUpdates = () => {
   const [status, setStatus] = useState("Pending");
   const [comment, setComment] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleUpdate = (e) => {
+  const handleUpdate = async (e) => {
     e.preventDefault();
 
     if (!complaintId) {
@@ -15,7 +16,34 @@ const StatusUpdates = () => {
       return;
     }
 
-    setMessage(`Status updated successfully for ${complaintId}.`);
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const response = await fetch(
+        `http://localhost:8081/api/complaints/${complaintId}/status?status=${encodeURIComponent(status)}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update status");
+      }
+
+      await response.json();
+
+      setMessage(`Status updated successfully for ${complaintId}.`);
+      setComment("");
+    } catch (error) {
+      console.error(error);
+      setMessage("Failed to update status. Please check the complaint ID.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -31,7 +59,7 @@ const StatusUpdates = () => {
             <label>Complaint ID</label>
             <input
               type="text"
-              placeholder="Enter complaint ID (e.g. CMP-001)"
+              placeholder="Enter complaint ID (e.g. 1)"
               value={complaintId}
               onChange={(e) => setComplaintId(e.target.value)}
             />
@@ -60,8 +88,8 @@ const StatusUpdates = () => {
             />
           </div>
 
-          <button type="submit" className="update-btn">
-            Update Status
+          <button type="submit" className="update-btn" disabled={loading}>
+            {loading ? "Updating..." : "Update Status"}
           </button>
 
           {message && <p className="update-message">{message}</p>}

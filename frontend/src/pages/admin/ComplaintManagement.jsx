@@ -1,51 +1,39 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../../styles/ComplaintManagement.css";
 
 const ComplaintManagement = () => {
+  const [complaints, setComplaints] = useState([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const complaints = [
-    {
-      id: "CMP-001",
-      citizen: "Rahul Sharma",
-      category: "Road",
-      location: "Ghaziabad",
-      date: "10 Aug 2026",
-      status: "Pending",
-    },
-    {
-      id: "CMP-002",
-      citizen: "Priya Singh",
-      category: "Water",
-      location: "Noida",
-      date: "09 Aug 2026",
-      status: "In Progress",
-    },
-    {
-      id: "CMP-003",
-      citizen: "Aman Verma",
-      category: "Garbage",
-      location: "Delhi",
-      date: "08 Aug 2026",
-      status: "Resolved",
-    },
-    {
-      id: "CMP-004",
-      citizen: "Neha Gupta",
-      category: "Street Light",
-      location: "Ghaziabad",
-      date: "07 Aug 2026",
-      status: "Pending",
-    },
-  ];
+  useEffect(() => {
+    fetch("http://localhost:8081/api/complaints")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch complaints");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        setComplaints(data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Complaint API error:", error);
+        setError("Unable to load complaints");
+        setLoading(false);
+      });
+  }, []);
 
   const filteredComplaints = complaints.filter((complaint) => {
+    const searchText = search.toLowerCase();
+
     const matchesSearch =
-      complaint.id.toLowerCase().includes(search.toLowerCase()) ||
-      complaint.citizen.toLowerCase().includes(search.toLowerCase()) ||
-      complaint.category.toLowerCase().includes(search.toLowerCase()) ||
-      complaint.location.toLowerCase().includes(search.toLowerCase());
+      String(complaint.id ?? "").toLowerCase().includes(searchText) ||
+      String(complaint.category ?? "").toLowerCase().includes(searchText) ||
+      String(complaint.location ?? "").toLowerCase().includes(searchText);
 
     const matchesFilter =
       filter === "All" || complaint.status === filter;
@@ -58,6 +46,22 @@ const ComplaintManagement = () => {
     if (status === "In Progress") return "status progress";
     return "status pending";
   };
+
+  if (loading) {
+    return (
+      <div className="complaint-management">
+        <h2>Loading complaints...</h2>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="complaint-management">
+        <h2>{error}</h2>
+      </div>
+    );
+  }
 
   return (
     <div className="complaint-management">
@@ -95,7 +99,6 @@ const ComplaintManagement = () => {
             <thead>
               <tr>
                 <th>Complaint ID</th>
-                <th>Citizen</th>
                 <th>Category</th>
                 <th>Location</th>
                 <th>Date</th>
@@ -109,10 +112,13 @@ const ComplaintManagement = () => {
                 filteredComplaints.map((complaint) => (
                   <tr key={complaint.id}>
                     <td>{complaint.id}</td>
-                    <td>{complaint.citizen}</td>
                     <td>{complaint.category}</td>
                     <td>{complaint.location}</td>
-                    <td>{complaint.date}</td>
+                    <td>
+                      {complaint.createdAt
+                        ? new Date(complaint.createdAt).toLocaleDateString()
+                        : "-"}
+                    </td>
                     <td>
                       <span className={getStatusClass(complaint.status)}>
                         {complaint.status}
@@ -127,7 +133,7 @@ const ComplaintManagement = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="no-results">
+                  <td colSpan="6" className="no-results">
                     No complaints found.
                   </td>
                 </tr>

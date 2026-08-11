@@ -4,46 +4,45 @@ import "../../styles/ComplaintTracking.css";
 const ComplaintTracking = () => {
   const [searchId, setSearchId] = useState("");
   const [complaint, setComplaint] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const complaints = {
-    "CMP-001": {
-      id: "CMP-001",
-      citizen: "Rahul Sharma",
-      category: "Road",
-      location: "Ghaziabad",
-      date: "10 Aug 2026",
-      status: "In Progress",
-      description: "Road damage reported near the main market.",
-    },
-    "CMP-002": {
-      id: "CMP-002",
-      citizen: "Priya Singh",
-      category: "Water",
-      location: "Noida",
-      date: "09 Aug 2026",
-      status: "Pending",
-      description: "Water supply issue reported in the residential area.",
-    },
-    "CMP-003": {
-      id: "CMP-003",
-      citizen: "Aman Verma",
-      category: "Garbage",
-      location: "Delhi",
-      date: "08 Aug 2026",
-      status: "Resolved",
-      description: "Garbage collection issue reported.",
-    },
-  };
-
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     e.preventDefault();
 
-    const id = searchId.trim().toUpperCase();
+    const id = searchId.trim();
 
-    if (complaints[id]) {
-      setComplaint(complaints[id]);
-    } else {
+    if (!id) {
+      setError("Please enter a Complaint ID.");
       setComplaint(null);
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setComplaint(null);
+
+    try {
+      const response = await fetch(
+        `http://localhost:8081/api/complaints/${id}`
+      );
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error("Complaint not found.");
+        }
+
+        throw new Error("Failed to fetch complaint.");
+      }
+
+      const data = await response.json();
+
+      setComplaint(data);
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Unable to load complaint.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -71,31 +70,24 @@ const ComplaintTracking = () => {
       <form className="tracking-search" onSubmit={handleSearch}>
         <input
           type="text"
-          placeholder="Enter Complaint ID (e.g. CMP-001)"
+          placeholder="Enter Complaint ID (e.g. 1)"
           value={searchId}
           onChange={(e) => setSearchId(e.target.value)}
         />
 
-        <button type="submit">Track Complaint</button>
+        <button type="submit" disabled={loading}>
+          {loading ? "Searching..." : "Track Complaint"}
+        </button>
       </form>
 
-      {searchId && !complaint && (
-        <div className="not-found">
-          Complaint not found. Please check the Complaint ID.
-        </div>
-      )}
+      {error && <div className="not-found">{error}</div>}
 
       {complaint && (
         <div className="tracking-card">
           <div className="complaint-info">
-            <h2>{complaint.id}</h2>
+            <h2>Complaint #{complaint.id}</h2>
 
             <div className="info-grid">
-              <div>
-                <span>Citizen</span>
-                <strong>{complaint.citizen}</strong>
-              </div>
-
               <div>
                 <span>Category</span>
                 <strong>{complaint.category}</strong>
@@ -107,9 +99,19 @@ const ComplaintTracking = () => {
               </div>
 
               <div>
-                <span>Date Submitted</span>
-                <strong>{complaint.date}</strong>
+                <span>Priority</span>
+                <strong>{complaint.priority}</strong>
               </div>
+
+              <div>
+                <span>Citizen ID</span>
+                <strong>{complaint.citizenId}</strong>
+              </div>
+            </div>
+
+            <div className="description">
+              <span>Title</span>
+              <p>{complaint.title}</p>
             </div>
 
             <div className="description">
