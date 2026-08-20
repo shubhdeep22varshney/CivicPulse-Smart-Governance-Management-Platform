@@ -28,3 +28,24 @@
   - Citizen Complaint Management
   - Admin Complaint Management
   - Dashboard
+
+
+## Milestone-3
+
+* **Riya Kumari (Backend):**
+- Citizen Dashboard
+- Register Complaint
+- Track Complaint
+
+* **Sanjana Nitnware (Frontend):**
+- Citizen Dashboard
+- Register Complaint
+- Track Complaint
+
+* **Shamiha Asmi (Frontend):**
+- Department Dashboard
+- Reports and Analysis
+
+* **Shubhdeep Varshney (Backend):**
+- Department Dashboard
+- Reports and Analysis
