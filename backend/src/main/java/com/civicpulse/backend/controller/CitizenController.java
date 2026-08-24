@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import com.civicpulse.backend.dto.CitizenDashboardStats;
 import com.civicpulse.backend.entity.Citizen;
 import com.civicpulse.backend.service.CitizenService;
 
@@ -37,6 +37,14 @@ public class CitizenController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+    @GetMapping("/{id}/dashboard")
+public ResponseEntity<CitizenDashboardStats> getCitizenDashboard(
+        @PathVariable Long id) {
+
+    return ResponseEntity.ok(
+            citizenService.getCitizenDashboard(id)
+    );
+}
 
     @PutMapping("/{id}")
     public ResponseEntity<Citizen> updateCitizen(
