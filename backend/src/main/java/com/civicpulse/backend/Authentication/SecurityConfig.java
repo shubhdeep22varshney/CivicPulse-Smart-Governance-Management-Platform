@@ -30,18 +30,22 @@ public class SecurityConfig {
         http
                 .cors(cors -> {})
                 .csrf(csrf -> csrf.disable())
-
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
                         )
                 )
-
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/api/complaints/**", "/api/citizens/**", "/api/departments/**", "/api/dashboard/**").permitAll()
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/api/complaints/**",
+                                "/api/citizens/**",
+                                "/api/departments/**",
+                                "/api/dashboard/**",
+                                "/api/reports/**"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
-
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
