@@ -18,7 +18,6 @@ function Login() {
   const [loginMessage, setLoginMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -36,7 +35,6 @@ function Login() {
     setLoginMessage("");
   };
 
-  // Validate form
   const validate = () => {
     const newErrors = {};
 
@@ -55,7 +53,6 @@ function Login() {
     return newErrors;
   };
 
-  // Login with Spring Boot backend
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -86,7 +83,13 @@ function Login() {
         }
       );
 
-      const data = await response.json();
+      let data = {};
+
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
 
       if (!response.ok) {
         throw new Error(
@@ -96,13 +99,15 @@ function Login() {
 
       console.log("Login successful:", data);
 
-      // Store JWT token
-      localStorage.setItem("token", data.token);
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
 
-      // Store logged-in user information
-      localStorage.setItem("user", JSON.stringify(data));
+      localStorage.setItem(
+        "user",
+        JSON.stringify(data)
+      );
 
-      // Store Remember Me preference
       localStorage.setItem(
         "rememberMe",
         rememberMe.toString()
@@ -110,7 +115,6 @@ function Login() {
 
       setLoginMessage("Login successful!");
 
-      // Redirect based on user role
       if (data.role === "CITIZEN") {
         navigate("/citizen/dashboard");
       } else if (data.role === "ADMIN") {
@@ -121,11 +125,18 @@ function Login() {
     } catch (error) {
       console.error("Login error:", error);
 
-      setErrors({
-        submit:
-          error.message ||
-          "Unable to connect to the server. Please try again.",
-      });
+      if (error instanceof TypeError) {
+        setErrors({
+          submit:
+            "Unable to connect to the server. Please make sure the Spring Boot backend is running on port 8081.",
+        });
+      } else {
+        setErrors({
+          submit:
+            error.message ||
+            "Unable to connect to the server. Please try again.",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -148,14 +159,12 @@ function Login() {
             Login to report issues and track your complaints.
           </p>
 
-          {/* Success message */}
           {loginMessage && (
             <div className="success-box">
               {loginMessage}
             </div>
           )}
 
-          {/* Backend error message */}
           {errors.submit && (
             <div className="error-text">
               {errors.submit}
@@ -164,7 +173,6 @@ function Login() {
 
           <form onSubmit={handleSubmit} noValidate>
 
-            {/* Email */}
             <div className="form-group">
               <label htmlFor="email">
                 Email
@@ -186,7 +194,6 @@ function Login() {
               )}
             </div>
 
-            {/* Password */}
             <div className="form-group">
               <label htmlFor="password">
                 Password
@@ -226,14 +233,16 @@ function Login() {
               )}
             </div>
 
-            {/* Remember Me / Forgot Password */}
             <div className="login-options">
+
               <label className="remember-me">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) =>
-                    setRememberMe(e.target.checked)
+                    setRememberMe(
+                      e.target.checked
+                    )
                   }
                 />
                 Remember Me
@@ -245,9 +254,9 @@ function Login() {
               >
                 Forgot Password?
               </Link>
+
             </div>
 
-            {/* Login button */}
             <button
               type="submit"
               className="btn-submit"
@@ -257,9 +266,9 @@ function Login() {
                 ? "Logging in..."
                 : "Login"}
             </button>
+
           </form>
 
-          {/* Register link */}
           <p className="auth-footer-text">
             Don't have an account?{" "}
             <Link to="/register">
@@ -267,7 +276,6 @@ function Login() {
             </Link>
           </p>
 
-          {/* Home link */}
           <p className="auth-footer-text">
             <Link to="/">
               ← Back to Home

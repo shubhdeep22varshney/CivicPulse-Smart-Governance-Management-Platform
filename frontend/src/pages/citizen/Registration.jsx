@@ -24,17 +24,24 @@ function Registration() {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
+    // Keep only digits for phone number
+    const updatedValue =
+      name === "phone"
+        ? value.replace(/\D/g, "").slice(0, 10)
+        : value;
+
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: updatedValue,
     }));
 
-    // Clear field error while typing
     setErrors((prev) => ({
       ...prev,
       [name]: "",
       submit: "",
     }));
+
+    setSuccessMessage("");
   };
 
   // Password strength checker
@@ -83,7 +90,7 @@ function Registration() {
   const validate = () => {
     const newErrors = {};
 
-    // Full name
+    // Full Name
     if (!formData.fullName.trim()) {
       newErrors.fullName = "Full name is required.";
     } else if (formData.fullName.trim().length < 3) {
@@ -95,15 +102,19 @@ function Registration() {
     if (!formData.email.trim()) {
       newErrors.email = "Email is required.";
     } else if (
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+        formData.email.trim()
+      )
     ) {
       newErrors.email = "Enter a valid email address.";
     }
 
     // Phone
-    if (!formData.phone.trim()) {
+    const phone = formData.phone.replace(/\D/g, "");
+
+    if (!phone) {
       newErrors.phone = "Phone number is required.";
-    } else if (!/^[6-9]\d{9}$/.test(formData.phone)) {
+    } else if (!/^[6-9][0-9]{9}$/.test(phone)) {
       newErrors.phone =
         "Enter a valid 10-digit phone number.";
     }
@@ -121,7 +132,7 @@ function Registration() {
         "Password must be at least 8 characters.";
     }
 
-    // Confirm password
+    // Confirm Password
     if (!formData.confirmPassword) {
       newErrors.confirmPassword =
         "Please confirm your password.";
@@ -142,7 +153,6 @@ function Registration() {
     setSuccessMessage("");
     setErrors({});
 
-    // Validate frontend form
     const validationErrors = validate();
 
     if (Object.keys(validationErrors).length > 0) {
@@ -161,20 +171,22 @@ function Registration() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            // Backend expects "name", not "fullName"
-            name: formData.fullName,
-            email: formData.email,
+            name: formData.fullName.trim(),
+            email: formData.email.trim(),
             phone: formData.phone,
-            address: formData.address,
+            address: formData.address.trim(),
             password: formData.password,
-
-            // confirmPassword is NOT sent to backend
           }),
         }
       );
 
-      // Try to read backend response
-      const data = await response.json();
+      let data = {};
+
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
 
       if (!response.ok) {
         throw new Error(
@@ -182,13 +194,16 @@ function Registration() {
         );
       }
 
-      console.log("Registration successful:", data);
+      console.log(
+        "Registration successful:",
+        data
+      );
 
       setSuccessMessage(
         "Registration successful! You can now login."
       );
 
-      // Clear form after successful registration
+      // Clear form
       setFormData({
         fullName: "",
         email: "",
@@ -198,13 +213,23 @@ function Registration() {
         confirmPassword: "",
       });
     } catch (error) {
-      console.error("Registration error:", error);
+      console.error(
+        "Registration error:",
+        error
+      );
 
-      setErrors({
-        submit:
-          error.message ||
-          "Unable to connect to the server. Please try again.",
-      });
+      if (error instanceof TypeError) {
+        setErrors({
+          submit:
+            "Unable to connect to the server. Please make sure the Spring Boot backend is running on port 8081.",
+        });
+      } else {
+        setErrors({
+          submit:
+            error.message ||
+            "Registration failed. Please try again.",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -216,10 +241,12 @@ function Registration() {
 
       <section className="auth-section">
         <div className="auth-card">
+
           <h1>Citizen Registration</h1>
 
           <p className="auth-subtitle">
-            Create your account to report and track civic issues.
+            Create your account to report and track
+            civic issues.
           </p>
 
           {/* Success message */}
@@ -236,7 +263,10 @@ function Registration() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} noValidate>
+          <form
+            onSubmit={handleSubmit}
+            noValidate
+          >
 
             {/* Full Name */}
             <div className="form-group">
@@ -295,6 +325,8 @@ function Registration() {
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="10-digit mobile number"
+                maxLength={10}
+                inputMode="numeric"
               />
 
               {errors.phone && (
@@ -335,7 +367,9 @@ function Registration() {
               <div className="password-wrapper">
                 <input
                   type={
-                    showPassword ? "text" : "password"
+                    showPassword
+                      ? "text"
+                      : "password"
                   }
                   id="password"
                   name="password"
@@ -353,7 +387,9 @@ function Registration() {
                     )
                   }
                 >
-                  {showPassword ? "Hide" : "Show"}
+                  {showPassword
+                    ? "Hide"
+                    : "Show"}
                 </button>
               </div>
 
@@ -403,7 +439,9 @@ function Registration() {
                   }
                   id="confirmPassword"
                   name="confirmPassword"
-                  value={formData.confirmPassword}
+                  value={
+                    formData.confirmPassword
+                  }
                   onChange={handleChange}
                   placeholder="Re-enter your password"
                 />
@@ -440,6 +478,7 @@ function Registration() {
                 ? "Registering..."
                 : "Register"}
             </button>
+
           </form>
 
           <p className="auth-footer-text">
@@ -454,6 +493,7 @@ function Registration() {
               ← Back to Home
             </Link>
           </p>
+
         </div>
       </section>
 

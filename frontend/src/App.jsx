@@ -6,6 +6,8 @@ import Registration from "./pages/citizen/Registration";
 import Login from "./pages/citizen/Login";
 import ComingSoon from "./pages/citizen/ComingSoon";
 import CitizenDashboard from "./pages/citizen/CitizenDashboard";
+import RegisterComplaint from "./pages/citizen/RegisterComplaint";
+import TrackComplaint from "./pages/citizen/TrackComplaint";
 
 // Role selection
 import RoleSelect from "./pages/RoleSelect";
@@ -16,6 +18,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import ComplaintManagement from "./pages/admin/ComplaintManagement";
 import StatusUpdates from "./pages/admin/StatusUpdates";
 import ComplaintTracking from "./pages/admin/ComplaintTracking";
+
 
 function App() {
   return (
@@ -79,13 +82,13 @@ function App() {
         {/* Register Complaint */}
         <Route
           path="/register-complaint"
-          element={<ComingSoon title="Complaints" />}
+          element={<RegisterComplaint />}
         />
 
         {/* Track Complaint */}
         <Route
           path="/track-complaint"
-          element={<ComingSoon title="Track Complaint" />}
+          element={<TrackComplaint />}
         />
 
         {/* Notifications */}
