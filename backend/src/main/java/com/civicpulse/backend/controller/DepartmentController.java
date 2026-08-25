@@ -6,8 +6,11 @@ import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.civicpulse.backend.Authentication.AuthService;
+import com.civicpulse.backend.Authentication.RegisterOfficerRequest;
 import com.civicpulse.backend.entity.Complaint;
 import com.civicpulse.backend.entity.Department;
+import com.civicpulse.backend.entity.DepartmentOfficer;
 import com.civicpulse.backend.service.DepartmentService;
 
 @RestController
@@ -16,9 +19,21 @@ import com.civicpulse.backend.service.DepartmentService;
 public class DepartmentController {
 
     private final DepartmentService departmentService;
+    private final AuthService authService;
 
-    public DepartmentController(DepartmentService departmentService) {
+    public DepartmentController(DepartmentService departmentService, AuthService authService) {
         this.departmentService = departmentService;
+        this.authService = authService;
+    }
+
+    @PostMapping("/register-officer")
+    public ResponseEntity<DepartmentOfficer> registerOfficer(@RequestBody RegisterOfficerRequest request) {
+        return ResponseEntity.ok(authService.registerOfficer(request));
+    }
+
+    @GetMapping("/officers")
+    public ResponseEntity<List<DepartmentOfficer>> getAllOfficers() {
+        return ResponseEntity.ok(authService.getAllOfficers());
     }
 
     @PostMapping

@@ -55,7 +55,7 @@ function Login() {
     return newErrors;
   };
 
-  // Login with Spring Boot backend
+  // Authenticate against Spring Boot DB backend (/api/auth/citizen-login)
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -72,19 +72,35 @@ function Login() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(
-        "http://localhost:8081/api/auth/login",
+      let response = await fetch(
+        "http://localhost:8081/api/auth/citizen-login",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            email: formData.email,
+            email: formData.email.trim(),
             password: formData.password,
           }),
         }
       );
+
+      if (response.status === 404) {
+        response = await fetch(
+          "http://localhost:8081/api/auth/login",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: formData.email.trim(),
+              password: formData.password,
+            }),
+          }
+        );
+      }
 
       const data = await response.json();
 
@@ -94,12 +110,16 @@ function Login() {
         );
       }
 
-      console.log("Login successful:", data);
+      console.log("Citizen Login successful via DB (citizens table verified):", data);
+
+      if (data.role && data.role !== "CITIZEN" && data.role !== "ADMIN") {
+        throw new Error("Access denied: Not a registered citizen account.");
+      }
 
       // Store JWT token
       localStorage.setItem("token", data.token);
 
-      // Store logged-in user information
+      // Store logged-in user & citizen details from DB
       localStorage.setItem("user", JSON.stringify(data));
 
       // Store Remember Me preference
@@ -108,23 +128,23 @@ function Login() {
         rememberMe.toString()
       );
 
-      setLoginMessage("Login successful!");
+      setLoginMessage("Login successful! Redirecting...");
 
-      // Redirect based on user role
-      if (data.role === "CITIZEN") {
-        navigate("/");
-      } else if (data.role === "ADMIN") {
-        navigate("/admin/dashboard");
-      } else {
-        navigate("/");
-      }
+      setTimeout(() => {
+        if (data.role === "ADMIN") {
+          navigate("/admin/dashboard");
+        } else {
+          navigate("/");
+        }
+      }, 500);
+
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("Database login error:", error);
 
       setErrors({
         submit:
           error.message ||
-          "Unable to connect to the server. Please try again.",
+          "Unable to connect to authentication server. Please check your network connection.",
       });
     } finally {
       setIsLoading(false);
@@ -145,19 +165,19 @@ function Login() {
           <h1>Citizen Login</h1>
 
           <p className="auth-subtitle">
-            Login to report issues and track your complaints.
+            Login with your registered account credentials to report and track complaints.
           </p>
 
           {/* Success message */}
           {loginMessage && (
-            <div className="success-box">
+            <div className="success-box" style={{ background: "#ecfdf5", color: "#047857", padding: "10px", borderRadius: "8px", marginBottom: "16px", fontWeight: "600" }}>
               {loginMessage}
             </div>
           )}
 
-          {/* Backend error message */}
+          {/* Error message */}
           {errors.submit && (
-            <div className="error-text">
+            <div className="error-text" style={{ color: "#d64545", marginBottom: "16px", fontWeight: "600" }}>
               {errors.submit}
             </div>
           )}
@@ -167,7 +187,7 @@ function Login() {
             {/* Email */}
             <div className="form-group">
               <label htmlFor="email">
-                Email
+                Email Address
               </label>
 
               <input
@@ -177,6 +197,7 @@ function Login() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="you@example.com"
+                autoComplete="email"
               />
 
               {errors.email && (
@@ -204,6 +225,7 @@ function Login() {
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="Enter your password"
+                  autoComplete="current-password"
                 />
 
                 <button
@@ -254,7 +276,7 @@ function Login() {
               disabled={isLoading}
             >
               {isLoading
-                ? "Logging in..."
+                ? "Verifying Credentials..."
                 : "Login"}
             </button>
           </form>
