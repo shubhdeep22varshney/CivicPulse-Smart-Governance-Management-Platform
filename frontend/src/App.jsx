@@ -5,6 +5,7 @@ import Home from "./pages/citizen/Home";
 import Registration from "./pages/citizen/Registration";
 import Login from "./pages/citizen/Login";
 import ComingSoon from "./pages/citizen/ComingSoon";
+import CitizenDashboard from "./pages/citizen/CitizenDashboard";
 
 // Role selection
 import RoleSelect from "./pages/RoleSelect";
@@ -31,6 +32,11 @@ function App() {
 
         {/* Citizen Login */}
         <Route path="/login" element={<Login />} />
+
+        <Route
+          path="/citizen/dashboard"
+          element={<CitizenDashboard />}
+        />
 
         {/* ==================== ROLE SELECTION ==================== */}
 

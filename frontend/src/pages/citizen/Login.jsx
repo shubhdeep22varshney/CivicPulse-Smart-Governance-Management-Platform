@@ -112,7 +112,7 @@ function Login() {
 
       // Redirect based on user role
       if (data.role === "CITIZEN") {
-        navigate("/");
+        navigate("/citizen/dashboard");
       } else if (data.role === "ADMIN") {
         navigate("/admin/dashboard");
       } else {
