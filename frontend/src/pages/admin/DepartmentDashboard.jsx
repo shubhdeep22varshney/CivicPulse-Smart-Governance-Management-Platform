@@ -151,14 +151,19 @@ const DepartmentDashboard = () => {
   const [showExportModal, setShowExportModal] = useState(false);
   const [isOfficerModalOpen, setIsOfficerModalOpen] = useState(false);
   const [tooltip, setTooltip] = useState({ show: false, x: 0, y: 0, text: "" });
+  const [reportSummary, setReportSummary] = useState(null);
 
-  // Fetch API complaints & department records with fallback to state
+  // Fetch API complaints, department records, and backend report summary
   useEffect(() => {
     Promise.all([
       fetch("http://localhost:8081/api/departments").then((r) => r.ok ? r.json() : []).catch(() => []),
       fetch("http://localhost:8081/api/complaints").then((r) => r.ok ? r.json() : []).catch(() => []),
+      fetch("http://localhost:8081/api/reports/summary").then((r) => r.ok ? r.json() : null).catch(() => null),
     ])
-      .then(([apiDepartments, apiComplaints]) => {
+      .then(([apiDepartments, apiComplaints, apiReportSummary]) => {
+        if (apiReportSummary) {
+          setReportSummary(apiReportSummary);
+        }
         let baseDepts = [...INITIAL_DEPARTMENTS];
 
         // Merge API departments if returned from backend DB

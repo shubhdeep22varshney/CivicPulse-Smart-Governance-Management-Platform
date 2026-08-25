@@ -17,12 +17,12 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:8081/api/dashboard/stats")
+    fetch("http://localhost:8081/api/reports/summary")
       .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch dashboard data");
+        if (response.ok) {
+          return response.json();
         }
-        return response.json();
+        return fetch("http://localhost:8081/api/dashboard/stats").then((r) => r.ok ? r.json() : null);
       })
       .then((data) => {
         if (data) {
@@ -31,7 +31,7 @@ const AdminDashboard = () => {
         setLoading(false);
       })
       .catch((error) => {
-        console.error("Dashboard API error (using local mock analytics):", error);
+        console.error("Report API error (using local mock analytics):", error);
         setLoading(false);
       });
   }, []);
