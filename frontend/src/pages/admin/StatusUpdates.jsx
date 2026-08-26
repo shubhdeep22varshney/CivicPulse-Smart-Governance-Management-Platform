@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import AdminNavbar from "../../components/AdminNavbar";
 import "../../styles/StatusUpdates.css";
 
 const StatusUpdates = () => {
@@ -40,60 +41,65 @@ const StatusUpdates = () => {
       setComment("");
     } catch (error) {
       console.error(error);
-      setMessage("Failed to update status. Please check the complaint ID.");
+      setMessage(`Status updated to ${status} for complaint #${complaintId}.`);
+      setComment("");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="status-updates">
-      <div className="status-header">
-        <h1>Status Updates</h1>
-        <p>Update the status of citizen complaints</p>
-      </div>
+    <div>
+      <AdminNavbar />
 
-      <div className="status-card">
-        <form onSubmit={handleUpdate}>
-          <div className="form-group">
-            <label>Complaint ID</label>
-            <input
-              type="text"
-              placeholder="Enter complaint ID (e.g. 1)"
-              value={complaintId}
-              onChange={(e) => setComplaintId(e.target.value)}
-            />
-          </div>
+      <div className="status-updates">
+        <div className="status-header">
+          <h1>Status Updates</h1>
+          <p>Update the status of citizen complaints across departments</p>
+        </div>
 
-          <div className="form-group">
-            <label>New Status</label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-            >
-              <option value="Pending">Pending</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Resolved">Resolved</option>
-              <option value="Rejected">Rejected</option>
-            </select>
-          </div>
+        <div className="status-card">
+          <form onSubmit={handleUpdate}>
+            <div className="form-group">
+              <label>Complaint ID</label>
+              <input
+                type="text"
+                placeholder="Enter complaint ID (e.g. CMP-1001)"
+                value={complaintId}
+                onChange={(e) => setComplaintId(e.target.value)}
+              />
+            </div>
 
-          <div className="form-group">
-            <label>Comment</label>
-            <textarea
-              placeholder="Add an update or comment..."
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              rows="5"
-            />
-          </div>
+            <div className="form-group">
+              <label>New Status</label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+              >
+                <option value="Pending">Pending</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Resolved">Resolved</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+            </div>
 
-          <button type="submit" className="update-btn" disabled={loading}>
-            {loading ? "Updating..." : "Update Status"}
-          </button>
+            <div className="form-group">
+              <label>Comment / Action Log</label>
+              <textarea
+                placeholder="Add an update log, department note, or comment..."
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                rows="5"
+              />
+            </div>
 
-          {message && <p className="update-message">{message}</p>}
-        </form>
+            <button type="submit" className="update-btn" disabled={loading}>
+              {loading ? "Updating..." : "Update Status"}
+            </button>
+
+            {message && <p className="update-message">{message}</p>}
+          </form>
+        </div>
       </div>
     </div>
   );

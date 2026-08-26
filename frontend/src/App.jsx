@@ -12,12 +12,16 @@ import TrackComplaint from "./pages/citizen/TrackComplaint";
 // Role selection
 import RoleSelect from "./pages/RoleSelect";
 
+// Department Officer pages
+import DepartmentLogin from "./pages/department/DepartmentLogin";
+
 // Admin pages
 import AdminLoginPlaceholder from "./pages/admin/AdminLoginPlaceholder";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ComplaintManagement from "./pages/admin/ComplaintManagement";
 import StatusUpdates from "./pages/admin/StatusUpdates";
 import ComplaintTracking from "./pages/admin/ComplaintTracking";
+import DepartmentDashboard from "./pages/admin/DepartmentDashboard";
 
 
 function App() {
@@ -45,6 +49,24 @@ function App() {
 
         <Route path="/portal" element={<RoleSelect />} />
 
+        {/* ==================== DEPARTMENT OFFICER MODULE ==================== */}
+
+        {/* Department Officer Login */}
+        <Route
+          path="/department/login"
+          element={<DepartmentLogin />}
+        />
+        <Route
+          path="/officer/login"
+          element={<DepartmentLogin />}
+        />
+
+        {/* Department Officer Dashboard */}
+        <Route
+          path="/department/dashboard"
+          element={<DepartmentDashboard />}
+        />
+
         {/* ==================== ADMIN MODULE ==================== */}
 
         {/* Admin Login */}
@@ -57,6 +79,16 @@ function App() {
         <Route
           path="/admin/dashboard"
           element={<AdminDashboard />}
+        />
+
+        {/* Department Dashboard & Reports */}
+        <Route
+          path="/admin/departments"
+          element={<DepartmentDashboard />}
+        />
+        <Route
+          path="/admin/department-dashboard"
+          element={<DepartmentDashboard />}
         />
 
         {/* Complaint Management */}

@@ -3,14 +3,16 @@ package com.civicpulse.backend.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "citizens")
-public class Citizen {
+@Table(name = "department_officers")
+public class DepartmentOfficer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private Long userId;
+
+    private Long departmentId;
 
     private String name;
 
@@ -19,23 +21,29 @@ public class Citizen {
 
     private String password;
 
-    private String phone;
+    private String departmentName;
 
-    private String address;
+    private String departmentCode;
+
+    private String phone;
 
     private String role;
 
-    public Citizen() {
+    public DepartmentOfficer() {
     }
 
-    public Citizen(Long id, Long userId, String name, String email, String password, String phone, String address, String role) {
+    public DepartmentOfficer(Long id, Long userId, Long departmentId, String name, String email,
+                             String password, String departmentName, String departmentCode,
+                             String phone, String role) {
         this.id = id;
         this.userId = userId;
+        this.departmentId = departmentId;
         this.name = name;
         this.email = email;
         this.password = password;
+        this.departmentName = departmentName;
+        this.departmentCode = departmentCode;
         this.phone = phone;
-        this.address = address;
         this.role = role;
     }
 
@@ -53,6 +61,14 @@ public class Citizen {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public Long getDepartmentId() {
+        return departmentId;
+    }
+
+    public void setDepartmentId(Long departmentId) {
+        this.departmentId = departmentId;
     }
 
     public String getName() {
@@ -79,20 +95,28 @@ public class Citizen {
         this.password = password;
     }
 
+    public String getDepartmentName() {
+        return departmentName;
+    }
+
+    public void setDepartmentName(String departmentName) {
+        this.departmentName = departmentName;
+    }
+
+    public String getDepartmentCode() {
+        return departmentCode;
+    }
+
+    public void setDepartmentCode(String departmentCode) {
+        this.departmentCode = departmentCode;
+    }
+
     public String getPhone() {
         return phone;
     }
 
     public void setPhone(String phone) {
         this.phone = phone;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
     }
 
     public String getRole() {
@@ -103,4 +127,3 @@ public class Citizen {
         this.role = role;
     }
 }
-
