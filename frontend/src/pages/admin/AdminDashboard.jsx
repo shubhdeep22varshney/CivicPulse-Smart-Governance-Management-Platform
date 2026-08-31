@@ -14,7 +14,7 @@ const AdminDashboard = () => {
     inProgressComplaints: 371,
     resolvedComplaints: 804,
   });
-  const [loading, setLoading] = useState(true);
+  const [feedbackStats, setFeedbackStats] = useState(null);
 
   useEffect(() => {
     fetch("http://localhost:8081/api/reports/summary")
@@ -34,6 +34,11 @@ const AdminDashboard = () => {
         console.error("Report API error (using local mock analytics):", error);
         setLoading(false);
       });
+
+    fetch("http://localhost:8081/api/feedback/stats")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d && setFeedbackStats(d))
+      .catch(() => {});
   }, []);
 
   const getStatusClass = (status) => {
@@ -67,6 +72,11 @@ const AdminDashboard = () => {
       title: "Resolved",
       value: dashboardData?.resolvedComplaints ?? 804,
       description: "Successfully resolved",
+    },
+    {
+      title: "Customer Rating",
+      value: feedbackStats?.averageRating ? `${feedbackStats.averageRating} ★` : "4.8 ★",
+      description: `From ${feedbackStats?.totalFeedbacks ?? 12} citizen reviews`,
     },
   ];
 

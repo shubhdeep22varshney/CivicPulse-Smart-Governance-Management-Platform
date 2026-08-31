@@ -8,6 +8,7 @@ import ComingSoon from "./pages/citizen/ComingSoon";
 import CitizenDashboard from "./pages/citizen/CitizenDashboard";
 import RegisterComplaint from "./pages/citizen/RegisterComplaint";
 import TrackComplaint from "./pages/citizen/TrackComplaint";
+import Feedback from "./pages/citizen/Feedback";
 
 // Role selection
 import RoleSelect from "./pages/RoleSelect";
@@ -132,7 +133,7 @@ function App() {
         {/* Feedback */}
         <Route
           path="/feedback"
-          element={<ComingSoon title="Feedback" />}
+          element={<Feedback />}
         />
 
         {/* Profile */}

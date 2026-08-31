@@ -60,7 +60,8 @@ public class SecurityConfig {
                                 "/api/citizens/**",
                                 "/api/departments/**",
                                 "/api/dashboard/**",
-                                "/api/reports/**"
+                                "/api/reports/**",
+                                "/api/feedback/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
