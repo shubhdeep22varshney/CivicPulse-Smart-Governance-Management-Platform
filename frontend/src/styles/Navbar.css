@@ -103,3 +103,45 @@
     font-size: 0.8rem;
   }
 }
+/* ================================
+   CITIZEN LOGOUT BUTTON
+   ================================ */
+
+.citizen-logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+
+  padding: 7px 12px;
+
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 7px;
+
+  background: #f54a4a;
+  border-color: #ef4444;
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+  white-space: nowrap;
+
+  transition: all 0.2s ease;
+}
+
+.citizen-logout-btn:hover {
+  background: #d60909;
+  border-color: #ef4444;
+  color: #ffffff;
+}
+
+.citizen-logout-btn:active {
+  transform: scale(0.97);
+}
+
+.citizen-logout-btn .logout-icon {
+  font-size: 15px;
+}

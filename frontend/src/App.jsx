@@ -18,6 +18,7 @@ import RoleSelect from "./pages/RoleSelect";
 // Department Officer pages
 import DepartmentLogin from "./pages/department/DepartmentLogin";
 
+
 // Admin pages
 import AdminLoginPlaceholder from "./pages/admin/AdminLoginPlaceholder";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -25,6 +26,7 @@ import ComplaintManagement from "./pages/admin/ComplaintManagement";
 import StatusUpdates from "./pages/admin/StatusUpdates";
 import ComplaintTracking from "./pages/admin/ComplaintTracking";
 import DepartmentDashboard from "./pages/admin/DepartmentDashboard";
+
 
 function App() {
   return (
@@ -68,9 +70,12 @@ function App() {
         {/* Department Officer Dashboard */}
         <Route
           path="/department/dashboard"
+
           element={<DepartmentDashboard />}
         />
-
+       {/* element={<DepartmentOfficerDashboard />} <Route path="/admin/complaints" element={<ComplaintManagement />} />
+        <Route path="/admin/status" element={<StatusUpdates />} />
+        <Route path="/admin/tracking" element={<ComplaintTracking />} /> */}
         {/* ==================== ADMIN MODULE ==================== */}
 
         {/* Admin Login */}

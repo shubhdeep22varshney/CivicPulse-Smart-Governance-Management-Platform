@@ -7,7 +7,7 @@ import "../../styles/AdminDashboard.css";
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [isOfficerModalOpen, setIsOfficerModalOpen] = useState(false);
-
+   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState({
     totalComplaints: 1420,
     pendingComplaints: 245,

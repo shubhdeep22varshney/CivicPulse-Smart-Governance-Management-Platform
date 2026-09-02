@@ -112,10 +112,11 @@ function Navbar() {
               </span>
 
               <button
+                className="citizen-logout-btn"
                 onClick={handleLogout}
-                className="btn btn-outline"
-                style={{ cursor: "pointer" }}
+                title="Logout"
               >
+                
                 Logout
               </button>
 
