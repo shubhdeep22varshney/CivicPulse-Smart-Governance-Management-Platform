@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
@@ -10,6 +10,13 @@ function TrackComplaint() {
   const [complaints, setComplaints] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Filters
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [categoryFilter, setCategoryFilter] = useState("ALL");
+  const [priorityFilter, setPriorityFilter] = useState("ALL");
+  const [sortBy, setSortBy] = useState("NEWEST");
 
   useEffect(() => {
     fetchComplaints();
@@ -79,6 +86,10 @@ function TrackComplaint() {
     }
   };
 
+  // -----------------------------
+  // Status helpers
+  // -----------------------------
+
   const getStatusClass = (status) => {
     const normalizedStatus = status?.toUpperCase();
 
@@ -107,6 +118,152 @@ function TrackComplaint() {
 
     return status.replace(/_/g, " ");
   };
+
+  // -----------------------------
+  // Unique filter options
+  // -----------------------------
+
+  const categories = useMemo(() => {
+    return [
+      ...new Set(
+        complaints
+          .map((complaint) => complaint.category)
+          .filter(Boolean)
+      ),
+    ].sort();
+  }, [complaints]);
+
+  // -----------------------------
+  // Filter + Sort
+  // -----------------------------
+
+  const filteredComplaints = useMemo(() => {
+    let result = [...complaints];
+
+    const search = searchTerm.trim().toLowerCase();
+
+    // Search
+    if (search) {
+      result = result.filter((complaint) => {
+        const id = String(
+          complaint.id || complaint.complaintId || ""
+        ).toLowerCase();
+
+        const title = String(
+          complaint.title || ""
+        ).toLowerCase();
+
+        const location = String(
+          complaint.location || ""
+        ).toLowerCase();
+
+        return (
+          id.includes(search) ||
+          title.includes(search) ||
+          location.includes(search)
+        );
+      });
+    }
+
+    // Status filter
+    if (statusFilter !== "ALL") {
+      result = result.filter(
+        (complaint) =>
+          complaint.status?.toUpperCase() === statusFilter
+      );
+    }
+
+    // Category filter
+    if (categoryFilter !== "ALL") {
+      result = result.filter(
+        (complaint) =>
+          complaint.category === categoryFilter
+      );
+    }
+
+    // Priority filter
+    if (priorityFilter !== "ALL") {
+      result = result.filter(
+        (complaint) =>
+          complaint.priority?.toUpperCase() === priorityFilter
+      );
+    }
+
+    // Sort
+    result.sort((a, b) => {
+      if (sortBy === "PRIORITY") {
+        const priorityOrder = {
+          HIGH: 3,
+          MEDIUM: 2,
+          LOW: 1,
+        };
+
+        return (
+          (priorityOrder[b.priority?.toUpperCase()] || 0) -
+          (priorityOrder[a.priority?.toUpperCase()] || 0)
+        );
+      }
+
+      if (sortBy === "STATUS") {
+        const statusOrder = {
+          PENDING: 1,
+          IN_PROGRESS: 2,
+          RESOLVED: 3,
+          REJECTED: 4,
+        };
+
+        return (
+          (statusOrder[
+            b.status?.toUpperCase()
+          ] || 0) -
+          (statusOrder[
+            a.status?.toUpperCase()
+          ] || 0)
+        );
+      }
+
+      if (sortBy === "OLDEST") {
+        return (
+          Number(a.id || a.complaintId || 0) -
+          Number(b.id || b.complaintId || 0)
+        );
+      }
+
+      // Default: newest
+      return (
+        Number(b.id || b.complaintId || 0) -
+        Number(a.id || a.complaintId || 0)
+      );
+    });
+
+    return result;
+  }, [
+    complaints,
+    searchTerm,
+    statusFilter,
+    categoryFilter,
+    priorityFilter,
+    sortBy,
+  ]);
+
+  // -----------------------------
+  // Clear filters
+  // -----------------------------
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("ALL");
+    setCategoryFilter("ALL");
+    setPriorityFilter("ALL");
+    setSortBy("NEWEST");
+  };
+
+  const filtersActive =
+    searchTerm ||
+    statusFilter !== "ALL" ||
+    categoryFilter !== "ALL" ||
+    priorityFilter !== "ALL" ||
+    sortBy !== "NEWEST";
 
   return (
     <div className="track-complaint-page">
@@ -184,117 +341,261 @@ function TrackComplaint() {
             </div>
           )}
 
-        {/* Complaint List */}
+        {/* Complaints */}
         {!isLoading &&
           !error &&
           complaints.length > 0 && (
             <section className="complaints-list">
 
+              {/* Search + Filters */}
+              <div className="complaint-filters">
+
+                {/* Search */}
+                <div className="search-filter-box">
+                  <span className="search-icon">🔎</span>
+
+                  <input
+                    type="text"
+                    placeholder="Search by ID, title or location..."
+                    value={searchTerm}
+                    onChange={(e) =>
+                      setSearchTerm(e.target.value)
+                    }
+                  />
+                </div>
+
+                {/* Status */}
+                <select
+                  value={statusFilter}
+                  onChange={(e) =>
+                    setStatusFilter(e.target.value)
+                  }
+                  className="filter-select"
+                >
+                  <option value="ALL">
+                    All Status
+                  </option>
+                  <option value="PENDING">
+                    Pending
+                  </option>
+                  <option value="IN_PROGRESS">
+                    In Progress
+                  </option>
+                  <option value="RESOLVED">
+                    Resolved
+                  </option>
+                  <option value="REJECTED">
+                    Rejected
+                  </option>
+                </select>
+
+                {/* Category */}
+                <select
+                  value={categoryFilter}
+                  onChange={(e) =>
+                    setCategoryFilter(e.target.value)
+                  }
+                  className="filter-select"
+                >
+                  <option value="ALL">
+                    All Categories
+                  </option>
+
+                  {categories.map((category) => (
+                    <option
+                      key={category}
+                      value={category}
+                    >
+                      {category}
+                    </option>
+                  ))}
+                </select>
+
+                {/* Priority */}
+                <select
+                  value={priorityFilter}
+                  onChange={(e) =>
+                    setPriorityFilter(e.target.value)
+                  }
+                  className="filter-select"
+                >
+                  <option value="ALL">
+                    All Priority
+                  </option>
+                  <option value="HIGH">
+                    High
+                  </option>
+                  <option value="MEDIUM">
+                    Medium
+                  </option>
+                  <option value="LOW">
+                    Low
+                  </option>
+                </select>
+
+                {/* Sort */}
+                <select
+                  value={sortBy}
+                  onChange={(e) =>
+                    setSortBy(e.target.value)
+                  }
+                  className="filter-select"
+                >
+                  <option value="NEWEST">
+                    Newest First
+                  </option>
+                  <option value="OLDEST">
+                    Oldest First
+                  </option>
+                  <option value="PRIORITY">
+                    Highest Priority
+                  </option>
+                  <option value="STATUS">
+                    Status
+                  </option>
+                </select>
+
+                {/* Clear */}
+                {filtersActive && (
+                  <button
+                    className="clear-filters-btn"
+                    onClick={clearFilters}
+                  >
+                    ✕ Clear
+                  </button>
+                )}
+              </div>
+
+              {/* List Header */}
               <div className="complaints-list-header">
                 <h2>Your Complaints</h2>
 
                 <span>
+                  Showing {filteredComplaints.length} of{" "}
                   {complaints.length} Complaint
                   {complaints.length !== 1 ? "s" : ""}
                 </span>
               </div>
 
-              {complaints.map((complaint, index) => (
-                <div
-                  className="complaint-track-card"
-                  key={
-                    complaint.id ||
-                    complaint.complaintId ||
-                    index
-                  }
-                >
-
-                  {/* Top */}
-                  <div className="complaint-card-top">
-
-                    <div>
-                      <span className="complaint-id">
-                        Complaint #
-                        {complaint.id ||
-                          complaint.complaintId ||
-                          index + 1}
-                      </span>
-
-                      <h3>
-                        {complaint.title ||
-                          "Untitled Complaint"}
-                      </h3>
-                    </div>
-
-                    <span
-                      className={`status-badge ${getStatusClass(
-                        complaint.status
-                      )}`}
-                    >
-                      {formatStatus(
-                        complaint.status
-                      )}
-                    </span>
-
+              {/* No filter results */}
+              {filteredComplaints.length === 0 && (
+                <div className="no-filter-results">
+                  <div className="no-complaints-icon">
+                    🔍
                   </div>
 
-                  {/* Description */}
-                  <p className="complaint-description">
-                    {complaint.description ||
-                      "No description available."}
+                  <h2>No Matching Complaints</h2>
+
+                  <p>
+                    Try changing your search or filters.
                   </p>
 
-                  {/* Details */}
-                  <div className="complaint-details">
+                  <button
+                    className="clear-filters-btn"
+                    onClick={clearFilters}
+                  >
+                    Clear Filters
+                  </button>
+                </div>
+              )}
 
-                    <div className="detail-item">
-                      <span className="detail-label">
-                        Category
-                      </span>
+              {/* Complaint Cards */}
+              {filteredComplaints.map(
+                (complaint, index) => (
+                  <div
+                    className="complaint-track-card"
+                    key={
+                      complaint.id ||
+                      complaint.complaintId ||
+                      index
+                    }
+                  >
 
-                      <span className="detail-value">
-                        {complaint.category || "-"}
-                      </span>
-                    </div>
+                    {/* Top */}
+                    <div className="complaint-card-top">
 
-                    <div className="detail-item">
-                      <span className="detail-label">
-                        Location
-                      </span>
+                      <div>
+                        <span className="complaint-id">
+                          Complaint #
+                          {complaint.id ||
+                            complaint.complaintId ||
+                            index + 1}
+                        </span>
 
-                      <span className="detail-value">
-                        {complaint.location || "-"}
-                      </span>
-                    </div>
-
-                    <div className="detail-item">
-                      <span className="detail-label">
-                        Priority
-                      </span>
+                        <h3>
+                          {complaint.title ||
+                            "Untitled Complaint"}
+                        </h3>
+                      </div>
 
                       <span
-                        className={`priority-value priority-${(
-                          complaint.priority || "low"
-                        ).toLowerCase()}`}
+                        className={`status-badge ${getStatusClass(
+                          complaint.status
+                        )}`}
                       >
-                        {complaint.priority || "-"}
+                        {formatStatus(
+                          complaint.status
+                        )}
                       </span>
                     </div>
 
-                    <div className="detail-item">
-                      <span className="detail-label">
-                        Department
-                      </span>
+                    {/* Description */}
+                    <p className="complaint-description">
+                      {complaint.description ||
+                        "No description available."}
+                    </p>
 
-                      <span className="detail-value">
-                        {complaint.departmentId || "-"}
-                      </span>
+                    {/* Details */}
+                    <div className="complaint-details">
+
+                      <div className="detail-item">
+                        <span className="detail-label">
+                          Category
+                        </span>
+
+                        <span className="detail-value">
+                          {complaint.category || "-"}
+                        </span>
+                      </div>
+
+                      <div className="detail-item">
+                        <span className="detail-label">
+                          Location
+                        </span>
+
+                        <span className="detail-value">
+                          {complaint.location || "-"}
+                        </span>
+                      </div>
+
+                      <div className="detail-item">
+                        <span className="detail-label">
+                          Priority
+                        </span>
+
+                        <span
+                          className={`priority-value priority-${(
+                            complaint.priority || "low"
+                          ).toLowerCase()}`}
+                        >
+                          {complaint.priority || "-"}
+                        </span>
+                      </div>
+
+                      <div className="detail-item">
+                        <span className="detail-label">
+                          Department
+                        </span>
+
+                        <span className="detail-value">
+                          {complaint.departmentId || "-"}
+                        </span>
+                      </div>
+
                     </div>
-
                   </div>
-
-                </div>
-              ))}
+                )
+              )}
 
             </section>
           )}

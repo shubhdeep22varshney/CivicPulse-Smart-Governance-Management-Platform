@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   ClipboardList,
   Clock3,
-  MapPin,
   Search,
   Send,
   Settings2,
@@ -29,12 +28,10 @@ function Home() {
 
   /*
    * Check whether a citizen is already logged in.
-   * The user object is stored in localStorage after login.
    */
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    // Check login status
     const storedUser = localStorage.getItem("user");
 
     if (storedUser) {
@@ -102,15 +99,7 @@ function Home() {
   }, []);
 
   /*
-   * Dynamic routes:
-   *
-   * Logged in:
-   * Report -> Register Complaint
-   * Track  -> Track Complaint
-   *
-   * Logged out:
-   * Report -> Citizen Registration
-   * Track  -> Citizen Login
+   * Dynamic routes
    */
   const reportRoute = isLoggedIn
     ? "/register-complaint"
@@ -192,141 +181,6 @@ function Home() {
               <div className="trust-item">
                 <CheckCircle2 size={18} />
                 <span>Complaint status tracking</span>
-              </div>
-
-            </div>
-
-          </div>
-
-
-          {/* RIGHT SIDE */}
-
-          <div className="hero-visual">
-
-            <div className="dashboard-preview">
-
-              <div className="preview-header">
-
-                <div>
-                  <span className="preview-small-title">
-                    CivicPulse
-                  </span>
-
-                  <h3>Complaint Management</h3>
-                </div>
-
-                <div className="preview-status">
-                  <span></span>
-                  Active
-                </div>
-
-              </div>
-
-              <div className="preview-divider"></div>
-
-              <div className="preview-complaint">
-
-                <div className="complaint-icon">
-                  <ClipboardList size={22} />
-                </div>
-
-                <div className="complaint-info">
-
-                  <span className="complaint-label">
-                    Recent Complaint
-                  </span>
-
-                  <h4>Street Light Issue</h4>
-
-                  <div className="complaint-location">
-                    <MapPin size={14} />
-                    Jalandhar, Punjab
-                  </div>
-
-                </div>
-
-              </div>
-
-              <div className="preview-progress">
-
-                <div className="progress-heading">
-                  <span>Complaint Status</span>
-                  <span>Pending</span>
-                </div>
-
-                <div className="progress-line">
-
-                  <div className="progress-step active">
-                    <span></span>
-                    <small>Submitted</small>
-                  </div>
-
-                  <div className="progress-connector"></div>
-
-                  <div className="progress-step">
-                    <span></span>
-                    <small>In Review</small>
-                  </div>
-
-                  <div className="progress-connector"></div>
-
-                  <div className="progress-step">
-                    <span></span>
-                    <small>Resolved</small>
-                  </div>
-
-                </div>
-
-              </div>
-
-              <div className="preview-footer">
-
-                <span>
-                  Last updated recently
-                </span>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    window.location.href = trackRoute;
-                  }}
-                >
-                  Track Progress
-                  <ArrowRight size={15} />
-                </button>
-
-              </div>
-
-            </div>
-
-
-            {/* FLOATING CARD 1 */}
-
-            <div className="floating-card floating-resolved">
-
-              <div className="floating-icon resolved-icon">
-                <CheckCircle2 size={20} />
-              </div>
-
-              <div>
-                <strong>Resolved</strong>
-                <span>Complaint closed</span>
-              </div>
-
-            </div>
-
-
-            {/* FLOATING CARD 2 */}
-
-            <div className="floating-card floating-track">
-
-              <div className="floating-icon track-icon">
-                <Clock3 size={20} />
-              </div>
-
-              <div>
-                <strong>Track Progress</strong>
-                <span>Stay updated</span>
               </div>
 
             </div>
