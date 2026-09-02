@@ -1,5 +1,8 @@
 package com.civicpulse.backend.Authentication;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -11,9 +14,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 public class SecurityConfig {
@@ -55,14 +55,15 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/auth/**",
-                                "/api/complaints/**",
-                                "/api/citizens/**",
-                                "/api/departments/**",
-                                "/api/dashboard/**",
-                                "/api/reports/**",
-                                "/api/feedback/**"
-                        ).permitAll()
+        "/api/auth/**",
+        "/api/complaints/**",
+        "/api/citizens/**",
+        "/api/departments/**",
+        "/api/dashboard/**",
+        "/api/reports/**",
+        "/api/feedback/**",
+        "/api/notifications/**"
+).permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(

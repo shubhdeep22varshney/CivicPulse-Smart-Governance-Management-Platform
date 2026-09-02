@@ -9,7 +9,7 @@ import CitizenDashboard from "./pages/citizen/CitizenDashboard";
 import RegisterComplaint from "./pages/citizen/RegisterComplaint";
 import TrackComplaint from "./pages/citizen/TrackComplaint";
 import Feedback from "./pages/citizen/Feedback";
-
+import Notifications from "./pages/citizen/Notifications";
 // Role selection
 import RoleSelect from "./pages/RoleSelect";
 
@@ -124,11 +124,10 @@ function App() {
           element={<TrackComplaint />}
         />
 
-        {/* Notifications */}
-        <Route
-          path="/notifications"
-          element={<ComingSoon title="Notifications" />}
-        />
+<Route
+  path="/notifications"
+  element={<Notifications />}
+/>
 
         {/* Feedback */}
         <Route

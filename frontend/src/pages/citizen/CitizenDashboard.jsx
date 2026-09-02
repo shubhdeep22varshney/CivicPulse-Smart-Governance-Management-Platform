@@ -7,14 +7,50 @@ import "../../styles/CitizenDashboard.css";
 
 function CitizenDashboard() {
   const navigate = useNavigate();
+
   const [user, setUser] = useState(null);
+  const [stats, setStats] = useState({
+    totalComplaints: 0,
+    pendingComplaints: 0,
+    inProgressComplaints: 0,
+    resolvedComplaints: 0,
+  });
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
 
     if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+
+        console.log("Logged-in user:", parsedUser);
+
+        // For the current Riya account:
+        // user ID 4 -> citizen ID 5
+        const citizenId = parsedUser.citizenId || 5;
+
+        fetch(`http://localhost:8081/api/citizens/${citizenId}/dashboard`)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Failed to fetch dashboard statistics");
+            }
+            return response.json();
+          })
+          .then((data) => {
+            console.log("Dashboard statistics:", data);
+
+            setStats({
+              totalComplaints: data.totalComplaints || 0,
+              pendingComplaints: data.pendingComplaints || 0,
+              inProgressComplaints: data.inProgressComplaints || 0,
+              resolvedComplaints: data.resolvedComplaints || 0,
+            });
+          })
+          .catch((error) => {
+            console.error("Dashboard API error:", error);
+          });
+
       } catch (error) {
         console.error("Error reading user data:", error);
       }
@@ -51,25 +87,33 @@ function CitizenDashboard() {
 
           <div className="dashboard-card">
             <h3>Total Complaints</h3>
-            <p className="card-number">0</p>
+            <p className="card-number">
+              {stats.totalComplaints}
+            </p>
             <span>Your registered complaints</span>
           </div>
 
           <div className="dashboard-card">
             <h3>Submitted</h3>
-            <p className="card-number">0</p>
+            <p className="card-number">
+              {stats.pendingComplaints}
+            </p>
             <span>Complaints submitted</span>
           </div>
 
           <div className="dashboard-card">
             <h3>In Progress</h3>
-            <p className="card-number">0</p>
+            <p className="card-number">
+              {stats.inProgressComplaints}
+            </p>
             <span>Complaints being processed</span>
           </div>
 
           <div className="dashboard-card">
             <h3>Resolved</h3>
-            <p className="card-number">0</p>
+            <p className="card-number">
+              {stats.resolvedComplaints}
+            </p>
             <span>Complaints resolved</span>
           </div>
 

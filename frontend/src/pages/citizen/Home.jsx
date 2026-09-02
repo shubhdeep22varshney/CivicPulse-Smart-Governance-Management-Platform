@@ -1,178 +1,749 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+import {
+  ArrowRight,
+  CheckCircle2,
+  ClipboardList,
+  Clock3,
+  MapPin,
+  Search,
+  Send,
+  Settings2,
+  ShieldCheck,
+} from "lucide-react";
+
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import "../../styles/Home.css";
 
-// ---- Static demo data (clearly labeled as demo, not real backend data) ----
-const stats = [
-  { label: "Complaints Registered", value: "1,250+" },
-  { label: "Complaints Resolved", value: "850+" },
-  { label: "Resolution Rate", value: "95%" },
-  { label: "Citizen Support", value: "24/7" },
-];
-
-const steps = [
-  {
-    title: "Register as a Citizen",
-    desc: "Create your CivicPulse account with basic details in under 2 minutes.",
-  },
-  {
-    title: "Report an Issue",
-    desc: "Submit a civic complaint with a category, location, and description.",
-  },
-  {
-    title: "Track Progress",
-    desc: "Follow your complaint status: Submitted → In Review → Resolved.",
-  },
-  {
-    title: "Get Notified",
-    desc: "Receive updates as local administration acts on your complaint.",
-  },
-];
-
-const features = [
-  {
-    title: "Easy Complaint Filing",
-    desc: "Report civic issues like roads, water, or sanitation in a few clicks.",
-  },
-  {
-    title: "Real-Time Status Tracking",
-    desc: "Know exactly where your complaint stands, at every stage.",
-  },
-  {
-    title: "Direct Communication",
-    desc: "Stay in the loop with updates from local administration.",
-  },
-  {
-    title: "Transparency Dashboard",
-    desc: "See resolution rates and response times openly, not hidden away.",
-  },
-];
-
 function Home() {
-  const [noticeVisible, setNoticeVisible] = useState(true);
+  const [stats, setStats] = useState({
+    total: 0,
+    pending: 0,
+    inProgress: 0,
+    resolved: 0,
+  });
+
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  /*
+   * Check whether a citizen is already logged in.
+   * The user object is stored in localStorage after login.
+   */
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    // Check login status
+    const storedUser = localStorage.getItem("user");
+
+    if (storedUser) {
+      try {
+        JSON.parse(storedUser);
+        setIsLoggedIn(true);
+      } catch (error) {
+        console.error("Error reading user data:", error);
+        setIsLoggedIn(false);
+      }
+    }
+
+    // Fetch real platform statistics
+    const fetchStatistics = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:8081/api/complaints"
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch complaints");
+        }
+
+        const complaints = await response.json();
+
+        const complaintList = Array.isArray(complaints)
+          ? complaints
+          : [];
+
+        const total = complaintList.length;
+
+        const pending = complaintList.filter(
+          (complaint) =>
+            complaint.status?.toUpperCase() === "PENDING"
+        ).length;
+
+        const inProgress = complaintList.filter(
+          (complaint) =>
+            complaint.status?.toUpperCase() === "IN_PROGRESS" ||
+            complaint.status?.toUpperCase() === "IN PROGRESS"
+        ).length;
+
+        const resolved = complaintList.filter(
+          (complaint) =>
+            complaint.status?.toUpperCase() === "RESOLVED"
+        ).length;
+
+        setStats({
+          total,
+          pending,
+          inProgress,
+          resolved,
+        });
+      } catch (error) {
+        console.error(
+          "Error fetching platform statistics:",
+          error
+        );
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
+    fetchStatistics();
+  }, []);
+
+  /*
+   * Dynamic routes:
+   *
+   * Logged in:
+   * Report -> Register Complaint
+   * Track  -> Track Complaint
+   *
+   * Logged out:
+   * Report -> Citizen Registration
+   * Track  -> Citizen Login
+   */
+  const reportRoute = isLoggedIn
+    ? "/register-complaint"
+    : "/register";
+
+  const trackRoute = isLoggedIn
+    ? "/track-complaint"
+    : "/login";
 
   return (
-    <div>
-      {/* Important civic notice banner — dismissible */}
-      {noticeVisible && (
-        <div className="notice-banner">
-          <p>
-            📢 <strong>Notice:</strong> CivicPulse is currently a student
-            project (demo). No real complaints are being processed.
-          </p>
-          <button
-            className="notice-close"
-            onClick={() => setNoticeVisible(false)}
-            aria-label="Close notice"
-          >
-            ✕
-          </button>
-        </div>
-      )}
+    <div className="home-page">
 
       <Navbar />
 
-      {/* ---------- Hero Section ---------- */}
-      <section className="hero">
-        <div className="hero-content">
-          <h1>Empowering Citizens. Enabling Governance.</h1>
-          <p>
-            CivicPulse connects citizens with local administration —
-            report issues, track resolutions, and hold governance
-            accountable, all in one platform.
-          </p>
-          <div className="hero-actions">
-            <Link to="/register" className="btn btn-primary-large">
-              Report an Issue
-            </Link>
-            <Link to="/login" className="btn btn-secondary-large">
-              Track Complaint
-            </Link>
+      {/* =====================================================
+          HERO SECTION
+      ====================================================== */}
+
+      <section className="hero-section">
+
+        <div className="hero-container">
+
+          {/* LEFT SIDE */}
+
+          <div className="hero-content">
+
+            <div className="hero-badge">
+              <ShieldCheck size={17} />
+              <span>Citizen Service Platform</span>
+            </div>
+
+            <h1>
+              Report Civic Issues.
+              <br />
+              <span>Track Their Resolution.</span>
+            </h1>
+
+            <p className="hero-description">
+              CivicPulse provides a simple way for citizens to report
+              local issues, follow complaint progress and stay informed
+              about the actions taken by the concerned department.
+            </p>
+
+            <div className="hero-actions">
+
+              {/* REPORT BUTTON */}
+
+              <Link
+                to={reportRoute}
+                className="hero-primary-button"
+              >
+                <Send size={18} />
+
+                <span>Report an Issue</span>
+
+                <ArrowRight size={17} />
+              </Link>
+
+              {/* TRACK BUTTON */}
+
+              <Link
+                to={trackRoute}
+                className="hero-secondary-button"
+              >
+                <Search size={18} />
+
+                <span>Track Complaint</span>
+              </Link>
+
+            </div>
+
+            <div className="hero-trust">
+
+              <div className="trust-item">
+                <CheckCircle2 size={18} />
+                <span>Easy complaint registration</span>
+              </div>
+
+              <div className="trust-item">
+                <CheckCircle2 size={18} />
+                <span>Complaint status tracking</span>
+              </div>
+
+            </div>
+
           </div>
-        </div>
-      </section>
 
-      {/* ---------- Stats Section ---------- */}
-      <section className="stats-section">
-        <p className="demo-label">Demo Data — for project illustration only</p>
-        <div className="stats-grid">
-          {stats.map((stat) => (
-            <div className="stat-card" key={stat.label}>
-              <h2>{stat.value}</h2>
-              <p>{stat.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
 
-      {/* ---------- How It Works ---------- */}
-      <section className="how-it-works" id="how-it-works">
-        <h2 className="section-title">How CivicPulse Works</h2>
-        <div className="steps-container">
-          {steps.map((step, index) => (
-            <div className="step-card" key={step.title}>
-              <div className="step-number">{index + 1}</div>
-              <h3>{step.title}</h3>
-              <p>{step.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+          {/* RIGHT SIDE */}
 
-      {/* ---------- Features Section ---------- */}
-      <section className="features-section" id="features">
-        <h2 className="section-title">Platform Features</h2>
-        <div className="features-grid">
-          {features.map((feature) => (
-            <div className="feature-card" key={feature.title}>
-              <h3>{feature.title}</h3>
-              <p>{feature.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+          <div className="hero-visual">
 
-      {/* ---------- Transparency Section ---------- */}
-      <section className="transparency-section">
-        <div className="transparency-content">
-          <h2 className="section-title">Transparency Score</h2>
-          <p>
-            A demo indicator showing how openly complaint resolution is
-            tracked on this platform.
-          </p>
-          <div className="progress-bar-wrapper">
-            <div className="progress-bar-fill" style={{ width: "95%" }}>
-              95%
+            <div className="dashboard-preview">
+
+              <div className="preview-header">
+
+                <div>
+                  <span className="preview-small-title">
+                    CivicPulse
+                  </span>
+
+                  <h3>Complaint Management</h3>
+                </div>
+
+                <div className="preview-status">
+                  <span></span>
+                  Active
+                </div>
+
+              </div>
+
+              <div className="preview-divider"></div>
+
+              <div className="preview-complaint">
+
+                <div className="complaint-icon">
+                  <ClipboardList size={22} />
+                </div>
+
+                <div className="complaint-info">
+
+                  <span className="complaint-label">
+                    Recent Complaint
+                  </span>
+
+                  <h4>Street Light Issue</h4>
+
+                  <div className="complaint-location">
+                    <MapPin size={14} />
+                    Jalandhar, Punjab
+                  </div>
+
+                </div>
+
+              </div>
+
+              <div className="preview-progress">
+
+                <div className="progress-heading">
+                  <span>Complaint Status</span>
+                  <span>Pending</span>
+                </div>
+
+                <div className="progress-line">
+
+                  <div className="progress-step active">
+                    <span></span>
+                    <small>Submitted</small>
+                  </div>
+
+                  <div className="progress-connector"></div>
+
+                  <div className="progress-step">
+                    <span></span>
+                    <small>In Review</small>
+                  </div>
+
+                  <div className="progress-connector"></div>
+
+                  <div className="progress-step">
+                    <span></span>
+                    <small>Resolved</small>
+                  </div>
+
+                </div>
+
+              </div>
+
+              <div className="preview-footer">
+
+                <span>
+                  Last updated recently
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.location.href = trackRoute;
+                  }}
+                >
+                  Track Progress
+                  <ArrowRight size={15} />
+                </button>
+
+              </div>
+
             </div>
+
+
+            {/* FLOATING CARD 1 */}
+
+            <div className="floating-card floating-resolved">
+
+              <div className="floating-icon resolved-icon">
+                <CheckCircle2 size={20} />
+              </div>
+
+              <div>
+                <strong>Resolved</strong>
+                <span>Complaint closed</span>
+              </div>
+
+            </div>
+
+
+            {/* FLOATING CARD 2 */}
+
+            <div className="floating-card floating-track">
+
+              <div className="floating-icon track-icon">
+                <Clock3 size={20} />
+              </div>
+
+              <div>
+                <strong>Track Progress</strong>
+                <span>Stay updated</span>
+              </div>
+
+            </div>
+
           </div>
-          <p className="demo-label">Demo value — not connected to a live backend</p>
+
         </div>
+
       </section>
 
-      {/* ---------- About Section ---------- */}
-      <section className="about-section" id="about">
-        <h2 className="section-title">About CivicPulse</h2>
-        <p>
-          CivicPulse is a smart governance management platform built to
-          bridge the gap between citizens and local administration. It
-          allows citizens to report civic issues, track their resolution,
-          and communicate directly with authorities — bringing
-          transparency and accountability to local governance.
-        </p>
+
+      {/* =====================================================
+          CITIZEN SERVICES + PLATFORM ACTIVITY
+      ====================================================== */}
+
+      <section className="services-activity-section">
+
+        <div className="services-activity-container">
+
+          {/* CITIZEN SERVICES */}
+
+          <div className="citizen-services">
+
+            <div className="section-label">
+              CITIZEN SERVICES
+            </div>
+
+            <h2>
+              Have a civic issue to report?
+            </h2>
+
+            <p>
+              Register your complaint and follow its progress
+              through your CivicPulse account.
+            </p>
+
+            <div className="service-buttons">
+
+              {/* REGISTER COMPLAINT */}
+
+              <Link
+                to={reportRoute}
+                className="register-button"
+              >
+                <Send size={17} />
+
+                <span>Register Complaint</span>
+
+                <ArrowRight size={16} />
+              </Link>
+
+
+              {/* TRACK COMPLAINT */}
+
+              <Link
+                to={trackRoute}
+                className="track-button"
+              >
+                <Search size={17} />
+
+                <span>Track Complaint</span>
+              </Link>
+
+            </div>
+
+          </div>
+
+
+          {/* PLATFORM ACTIVITY */}
+
+          <div className="platform-activity">
+
+            <div className="activity-heading">
+
+              <div>
+
+                <div className="section-label">
+                  PLATFORM ACTIVITY
+                </div>
+
+                <h2>
+                  CivicPulse at a glance
+                </h2>
+
+                <p>
+                  Current complaint statistics from the platform.
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <div className="stats-grid">
+
+              {/* TOTAL */}
+
+              <div className="stat-card">
+
+                <div className="stat-icon total-icon">
+                  <ClipboardList size={21} />
+                </div>
+
+                <div className="stat-content">
+
+                  <span>Total Complaints</span>
+
+                  <strong>
+                    {loadingStats ? "—" : stats.total}
+                  </strong>
+
+                </div>
+
+              </div>
+
+
+              {/* PENDING */}
+
+              <div className="stat-card">
+
+                <div className="stat-icon pending-icon">
+                  <Clock3 size={21} />
+                </div>
+
+                <div className="stat-content">
+
+                  <span>Pending</span>
+
+                  <strong>
+                    {loadingStats ? "—" : stats.pending}
+                  </strong>
+
+                </div>
+
+              </div>
+
+
+              {/* IN PROGRESS */}
+
+              <div className="stat-card">
+
+                <div className="stat-icon progress-icon">
+                  <Settings2 size={21} />
+                </div>
+
+                <div className="stat-content">
+
+                  <span>In Progress</span>
+
+                  <strong>
+                    {loadingStats ? "—" : stats.inProgress}
+                  </strong>
+
+                </div>
+
+              </div>
+
+
+              {/* RESOLVED */}
+
+              <div className="stat-card">
+
+                <div className="stat-icon resolved-stat-icon">
+                  <CheckCircle2 size={21} />
+                </div>
+
+                <div className="stat-content">
+
+                  <span>Resolved</span>
+
+                  <strong>
+                    {loadingStats ? "—" : stats.resolved}
+                  </strong>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
       </section>
 
-      {/* ---------- CTA Section ---------- */}
-      <section className="cta-section">
-        <h2>Ready to make your voice heard?</h2>
-        <p>Join CivicPulse today and start reporting civic issues.</p>
-        <Link to="/register" className="btn btn-primary-large">
-          Get Started
-        </Link>
+
+      {/* =====================================================
+          HOW CIVICPULSE WORKS
+      ====================================================== */}
+
+      <section className="how-section">
+
+        <div className="section-container">
+
+          <div className="section-heading">
+
+            <div className="section-label">
+              SIMPLE PROCESS
+            </div>
+
+            <h2>
+              How CivicPulse Works
+            </h2>
+
+            <p>
+              From reporting an issue to seeing it resolved,
+              everything stays organized in one place.
+            </p>
+
+          </div>
+
+
+          <div className="steps-grid">
+
+            <div className="process-card">
+
+              <div className="process-number">
+                01
+              </div>
+
+              <div className="process-icon">
+                <Send size={22} />
+              </div>
+
+              <h3>
+                Report an Issue
+              </h3>
+
+              <p>
+                Submit the details of a civic issue including
+                its category, location and priority.
+              </p>
+
+            </div>
+
+
+            <div className="process-card">
+
+              <div className="process-number">
+                02
+              </div>
+
+              <div className="process-icon">
+                <ClipboardList size={22} />
+              </div>
+
+              <h3>
+                Complaint Review
+              </h3>
+
+              <p>
+                Your complaint is assigned to the concerned
+                department for further action.
+              </p>
+
+            </div>
+
+
+            <div className="process-card">
+
+              <div className="process-number">
+                03
+              </div>
+
+              <div className="process-icon">
+                <Settings2 size={22} />
+              </div>
+
+              <h3>
+                Work in Progress
+              </h3>
+
+              <p>
+                Follow the progress while the concerned
+                department works on the reported issue.
+              </p>
+
+            </div>
+
+
+            <div className="process-card">
+
+              <div className="process-number">
+                04
+              </div>
+
+              <div className="process-icon">
+                <CheckCircle2 size={22} />
+              </div>
+
+              <h3>
+                Issue Resolved
+              </h3>
+
+              <p>
+                Once the issue is addressed, the complaint
+                status is updated as resolved.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
       </section>
+
+
+      {/* =====================================================
+          PLATFORM FEATURES
+      ====================================================== */}
+
+      <section className="features-section">
+
+        <div className="section-container">
+
+          <div className="section-heading">
+
+            <div className="section-label">
+              PLATFORM FEATURES
+            </div>
+
+            <h2>
+              Everything in one place
+            </h2>
+
+            <p>
+              CivicPulse makes it easier for citizens to
+              communicate civic issues and follow their progress.
+            </p>
+
+          </div>
+
+
+          <div className="features-grid">
+
+            <div className="feature-card">
+
+              <div className="feature-icon">
+                <Send size={22} />
+              </div>
+
+              <h3>
+                Easy Complaint Filing
+              </h3>
+
+              <p>
+                Report issues such as roads, street lights,
+                sanitation and water services through a simple form.
+              </p>
+
+            </div>
+
+
+            <div className="feature-card">
+
+              <div className="feature-icon">
+                <Search size={22} />
+              </div>
+
+              <h3>
+                Complaint Tracking
+              </h3>
+
+              <p>
+                View your submitted complaints and check the
+                latest status of each complaint.
+              </p>
+
+            </div>
+
+
+            <div className="feature-card">
+
+              <div className="feature-icon">
+                <Settings2 size={22} />
+              </div>
+
+              <h3>
+                Department Management
+              </h3>
+
+              <p>
+                Complaints can be directed to the appropriate
+                department based on the reported issue.
+              </p>
+
+            </div>
+
+
+            <div className="feature-card">
+
+              <div className="feature-icon">
+                <ShieldCheck size={22} />
+              </div>
+
+              <h3>
+                Transparent Process
+              </h3>
+
+              <p>
+                Citizens can follow the status of their complaints
+                instead of having to repeatedly contact authorities.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
 
       <Footer />
+
     </div>
   );
 }

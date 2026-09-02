@@ -10,7 +10,6 @@ import com.civicpulse.backend.repository.CitizenRepository;
 import com.civicpulse.backend.repository.ComplaintRepository;
 @Service
 public class CitizenService {
-
      private final CitizenRepository citizenRepository;
 private final ComplaintRepository complaintRepository;
 
@@ -21,16 +20,12 @@ private final ComplaintRepository complaintRepository;
     this.citizenRepository = citizenRepository;
     this.complaintRepository = complaintRepository;
 }
-    
-
     public List<Citizen> getAllCitizens() {
         return citizenRepository.findAll();
     }
-
     public Optional<Citizen> getCitizenById(Long id) {
         return citizenRepository.findById(id);
     }
-
     public Optional<Citizen> getCitizenByUserId(Long userId) {
         return citizenRepository.findByUserId(userId);
     }
@@ -66,7 +61,6 @@ private final ComplaintRepository complaintRepository;
             resolvedComplaints
     );
 }
-
     public Citizen updateCitizen(Long id, Citizen updatedCitizen) {
         Citizen citizen = citizenRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Citizen not found with id: " + id));
@@ -76,7 +70,6 @@ private final ComplaintRepository complaintRepository;
 
         return citizenRepository.save(citizen);
     }
-
     public void deleteCitizen(Long id) {
         citizenRepository.deleteById(id);
     }
