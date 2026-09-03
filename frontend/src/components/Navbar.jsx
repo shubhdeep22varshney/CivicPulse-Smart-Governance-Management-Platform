@@ -104,8 +104,8 @@ function Navbar() {
               <span
                 style={{
                   fontSize: "14px",
-                  fontWeight: "600",
-                  color: "#334155",
+                  fontWeight: "700",
+                  color: "#38bdf8",
                 }}
               >
                 👋 {currentUser.name || currentUser.email}

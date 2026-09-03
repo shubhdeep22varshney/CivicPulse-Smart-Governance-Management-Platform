@@ -24,6 +24,9 @@ const AdminNavbar = () => {
     (loggedInUser.role === "DEPARTMENT_OFFICER" ||
       loggedInUser.role === "DEPARTMENT");
 
+  const isDepartmentPortal =
+    isDepartmentOfficer || location.pathname === "/department/dashboard";
+
   const navItems = [
     {
       label: "Overview",
@@ -50,7 +53,7 @@ const AdminNavbar = () => {
       path: "/admin/tracking",
       icon: "🔍",
     },
-  ];
+  ].filter((item) => !(isDepartmentPortal && item.label === "Overview"));
 
   const handleLogout = () => {
     localStorage.removeItem("token");

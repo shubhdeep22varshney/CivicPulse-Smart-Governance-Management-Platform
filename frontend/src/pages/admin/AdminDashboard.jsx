@@ -141,29 +141,9 @@ const AdminDashboard = () => {
                 boxShadow: "0 4px 12px rgba(2, 132, 199, 0.3)",
                 display: "flex",
                 alignItems: "center",
-                gap: "8px"
               }}
             >
               ➕ Register Department Officer
-            </button>
-
-            <button
-              onClick={() => navigate("/admin/departments")}
-              style={{
-                background: "#0ea5a5",
-                color: "white",
-                border: "none",
-                padding: "12px 20px",
-                borderRadius: "8px",
-                fontWeight: "700",
-                cursor: "pointer",
-                boxShadow: "0 4px 12px rgba(14, 165, 165, 0.3)",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px"
-              }}
-            >
-              🏛️ Open Department Dashboard & Reports
             </button>
           </div>
         </div>
@@ -195,14 +175,6 @@ const AdminDashboard = () => {
               <h2>Department-Wise Performance Summary</h2>
               <p>Key operational metrics across active municipal departments</p>
             </div>
-
-            <button
-              className="view-all-btn"
-              style={{ background: "#0ea5a5" }}
-              onClick={() => navigate("/admin/departments")}
-            >
-              Full Analytics & Diagrams &rarr;
-            </button>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", marginTop: "16px" }}>

@@ -404,20 +404,6 @@ const DepartmentDashboard = () => {
         </div>
 
         <div className="dept-header-actions">
-          {/* Register Officer Button */}
-          <button
-            className="refresh-btn"
-            onClick={() => setIsOfficerModalOpen(true)}
-            style={{ background: "#0284c7", color: "#fff", borderColor: "#0284c7", fontWeight: 700 }}
-          >
-            ➕ Register Officer
-          </button>
-
-          {/* Back to Admin Overview */}
-          <button className="refresh-btn" onClick={() => navigate("/admin/dashboard")}>
-            &larr; General Overview
-          </button>
-
           {/* Department Filter Selector */}
           <select
             className="dept-select-dropdown"
