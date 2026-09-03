@@ -5,6 +5,7 @@ import Home from "./pages/citizen/Home";
 import Registration from "./pages/citizen/Registration";
 import Login from "./pages/citizen/Login";
 import ComingSoon from "./pages/citizen/ComingSoon";
+import Profile from "./pages/citizen/Profile";
 
 // Role selection
 import RoleSelect from "./pages/RoleSelect";
@@ -129,7 +130,7 @@ function App() {
         {/* Profile */}
         <Route
           path="/profile"
-          element={<ComingSoon title="Profile" />}
+          element={<Profile />}
         />
 
       </Routes>

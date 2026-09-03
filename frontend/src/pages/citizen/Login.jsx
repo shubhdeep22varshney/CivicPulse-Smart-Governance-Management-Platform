@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
+
 import "../../styles/Login.css";
 
 function Login() {
@@ -18,7 +20,9 @@ function Login() {
   const [loginMessage, setLoginMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // ================================
   // Handle input changes
+  // ================================
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -36,7 +40,9 @@ function Login() {
     setLoginMessage("");
   };
 
+  // ================================
   // Validate form
+  // ================================
   const validate = () => {
     const newErrors = {};
 
@@ -55,7 +61,13 @@ function Login() {
     return newErrors;
   };
 
+<<<<<<< HEAD
   // Authenticate against Spring Boot DB backend (/api/auth/citizen-login)
+=======
+  // ================================
+  // Login with Spring Boot backend
+  // ================================
+>>>>>>> 82fe6db (Update citizen login)
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -116,13 +128,23 @@ function Login() {
         throw new Error("Access denied: Not a registered citizen account.");
       }
 
+      // ================================
       // Store JWT token
+      // ================================
       localStorage.setItem("token", data.token);
 
+<<<<<<< HEAD
       // Store logged-in user & citizen details from DB
+=======
+      // ================================
+      // Store logged-in user information
+      // ================================
+>>>>>>> 82fe6db (Update citizen login)
       localStorage.setItem("user", JSON.stringify(data));
 
+      // ================================
       // Store Remember Me preference
+      // ================================
       localStorage.setItem(
         "rememberMe",
         rememberMe.toString()
@@ -138,6 +160,23 @@ function Login() {
         }
       }, 500);
 
+<<<<<<< HEAD
+=======
+      // ================================
+      // Redirect based on user role
+      // ================================
+      if (data.role === "CITIZEN") {
+        // Citizen goes to Profile after login
+        navigate("/profile");
+      } else if (data.role === "ADMIN") {
+        // Admin goes to Admin Dashboard
+        navigate("/admin/dashboard");
+      } else {
+        // Default route
+        navigate("/");
+      }
+
+>>>>>>> 82fe6db (Update citizen login)
     } catch (error) {
       console.error("Database login error:", error);
 
@@ -158,6 +197,7 @@ function Login() {
       <section className="auth-section">
         <div className="auth-card">
 
+          {/* Citizen Portal */}
           <span className="portal-badge">
             👤 Citizen Portal
           </span>
@@ -184,8 +224,11 @@ function Login() {
 
           <form onSubmit={handleSubmit} noValidate>
 
-            {/* Email */}
+            {/* ================================
+                Email
+            ================================= */}
             <div className="form-group">
+
               <label htmlFor="email">
                 Email Address
               </label>
@@ -205,15 +248,20 @@ function Login() {
                   {errors.email}
                 </span>
               )}
+
             </div>
 
-            {/* Password */}
+            {/* ================================
+                Password
+            ================================= */}
             <div className="form-group">
+
               <label htmlFor="password">
                 Password
               </label>
 
               <div className="password-wrapper">
+
                 <input
                   type={
                     showPassword
@@ -239,6 +287,7 @@ function Login() {
                 >
                   {showPassword ? "Hide" : "Show"}
                 </button>
+
               </div>
 
               {errors.password && (
@@ -246,19 +295,28 @@ function Login() {
                   {errors.password}
                 </span>
               )}
+
             </div>
 
-            {/* Remember Me / Forgot Password */}
+            {/* ================================
+                Remember Me / Forgot Password
+            ================================= */}
             <div className="login-options">
+
               <label className="remember-me">
+
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) =>
-                    setRememberMe(e.target.checked)
+                    setRememberMe(
+                      e.target.checked
+                    )
                   }
                 />
+
                 Remember Me
+
               </label>
 
               <Link
@@ -267,9 +325,12 @@ function Login() {
               >
                 Forgot Password?
               </Link>
+
             </div>
 
-            {/* Login button */}
+            {/* ================================
+                Login Button
+            ================================= */}
             <button
               type="submit"
               className="btn-submit"
@@ -279,6 +340,7 @@ function Login() {
                 ? "Verifying Credentials..."
                 : "Login"}
             </button>
+
           </form>
 
           {/* Register link */}
