@@ -10,6 +10,8 @@ import RegisterComplaint from "./pages/citizen/RegisterComplaint";
 import TrackComplaint from "./pages/citizen/TrackComplaint";
 import Feedback from "./pages/citizen/Feedback";
 import Notifications from "./pages/citizen/Notifications";
+import Profile from "./pages/citizen/Profile";
+
 // Role selection
 import RoleSelect from "./pages/RoleSelect";
 
@@ -23,7 +25,6 @@ import ComplaintManagement from "./pages/admin/ComplaintManagement";
 import StatusUpdates from "./pages/admin/StatusUpdates";
 import ComplaintTracking from "./pages/admin/ComplaintTracking";
 import DepartmentDashboard from "./pages/admin/DepartmentDashboard";
-
 
 function App() {
   return (
@@ -41,6 +42,7 @@ function App() {
         {/* Citizen Login */}
         <Route path="/login" element={<Login />} />
 
+        {/* Citizen Dashboard */}
         <Route
           path="/citizen/dashboard"
           element={<CitizenDashboard />}
@@ -57,6 +59,7 @@ function App() {
           path="/department/login"
           element={<DepartmentLogin />}
         />
+
         <Route
           path="/officer/login"
           element={<DepartmentLogin />}
@@ -87,6 +90,7 @@ function App() {
           path="/admin/departments"
           element={<DepartmentDashboard />}
         />
+
         <Route
           path="/admin/department-dashboard"
           element={<DepartmentDashboard />}
@@ -124,10 +128,11 @@ function App() {
           element={<TrackComplaint />}
         />
 
-<Route
-  path="/notifications"
-  element={<Notifications />}
-/>
+        {/* Notifications */}
+        <Route
+          path="/notifications"
+          element={<Notifications />}
+        />
 
         {/* Feedback */}
         <Route
@@ -138,7 +143,7 @@ function App() {
         {/* Profile */}
         <Route
           path="/profile"
-          element={<ComingSoon title="Profile" />}
+          element={<Profile />}
         />
 
       </Routes>

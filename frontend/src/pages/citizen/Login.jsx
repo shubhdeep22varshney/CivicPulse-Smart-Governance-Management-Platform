@@ -20,7 +20,9 @@ function Login() {
   const [loginMessage, setLoginMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // ================================
   // Handle input changes
+  // ================================
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -38,7 +40,9 @@ function Login() {
     setLoginMessage("");
   };
 
+  // ================================
   // Validate form
+  // ================================
   const validate = () => {
     const newErrors = {};
 
@@ -57,7 +61,9 @@ function Login() {
     return newErrors;
   };
 
+  // ================================
   // Login with Spring Boot backend
+  // ================================
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -89,7 +95,7 @@ function Login() {
         }
       );
 
-      // Fallback to common login endpoint if citizen-login does not exist
+      // Fallback to common login endpoint
       if (response.status === 404) {
         response = await fetch(
           "http://localhost:8081/api/auth/login",
@@ -133,7 +139,9 @@ function Login() {
         );
       }
 
-      // Store JWT token if available
+      // ================================
+      // Store JWT token
+      // ================================
       if (data.token) {
         localStorage.setItem("token", data.token);
       }
@@ -141,7 +149,9 @@ function Login() {
       // Store logged-in user information
       localStorage.setItem("user", JSON.stringify(data));
 
+      // ================================
       // Store Remember Me preference
+      // ================================
       localStorage.setItem(
         "rememberMe",
         rememberMe.toString()
@@ -149,10 +159,12 @@ function Login() {
 
       setLoginMessage("Login successful! Redirecting...");
 
-      // Redirect according to role
+      // ================================
+      // Redirect based on user role
+      // ================================
       setTimeout(() => {
         if (data.role === "CITIZEN") {
-          navigate("/citizen/dashboard");
+          navigate("/profile");
         } else if (data.role === "ADMIN") {
           navigate("/admin/dashboard");
         } else {
@@ -185,6 +197,8 @@ function Login() {
 
       <section className="auth-section">
         <div className="auth-card">
+
+          {/* Citizen Portal */}
           <span className="portal-badge">
             👤 Citizen Portal
           </span>
@@ -228,6 +242,7 @@ function Login() {
           )}
 
           <form onSubmit={handleSubmit} noValidate>
+
             {/* Email */}
             <div className="form-group">
               <label htmlFor="email">
@@ -298,6 +313,7 @@ function Login() {
                     setRememberMe(e.target.checked)
                   }
                 />
+
                 Remember Me
               </label>
 
@@ -309,7 +325,7 @@ function Login() {
               </Link>
             </div>
 
-            {/* Login button */}
+            {/* Login Button */}
             <button
               type="submit"
               className="btn-submit"
@@ -319,6 +335,7 @@ function Login() {
                 ? "Verifying Credentials..."
                 : "Login"}
             </button>
+
           </form>
 
           {/* Register link */}
@@ -335,6 +352,7 @@ function Login() {
               ← Back to Home
             </Link>
           </p>
+
         </div>
       </section>
 
