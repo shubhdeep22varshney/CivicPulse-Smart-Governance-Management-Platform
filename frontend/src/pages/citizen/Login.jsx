@@ -164,7 +164,7 @@ function Login() {
       // ================================
       setTimeout(() => {
         if (data.role === "CITIZEN") {
-          navigate("/profile");
+          navigate("/citizen/dashboard");
         } else if (data.role === "ADMIN") {
           navigate("/admin/dashboard");
         } else {
