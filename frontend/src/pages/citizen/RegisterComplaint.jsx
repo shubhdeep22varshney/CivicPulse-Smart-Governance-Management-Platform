@@ -12,8 +12,6 @@ function RegisterComplaint() {
     description: "",
     category: "",
     location: "",
-    priority: "Low",
-    departmentId: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -21,6 +19,7 @@ function RegisterComplaint() {
   const [isLoading, setIsLoading] = useState(false);
 
   const categories = [
+    "Fire & Emergency",
     "Street Light",
     "Road",
     "Water",
@@ -29,25 +28,6 @@ function RegisterComplaint() {
     "Drainage",
     "Electricity",
     "Other",
-  ];
-
-  const departments = [
-    {
-      id: 7,
-      name: "Electricity Department",
-    },
-    {
-      id: 8,
-      name: "Road Department",
-    },
-    {
-      id: 9,
-      name: "Water Department",
-    },
-    {
-      id: 10,
-      name: "Sanitation Department",
-    },
   ];
 
   const handleChange = (e) => {
@@ -92,16 +72,6 @@ function RegisterComplaint() {
         "Location is required.";
     }
 
-    if (!formData.priority) {
-      newErrors.priority =
-        "Please select priority.";
-    }
-
-    if (!formData.departmentId) {
-      newErrors.departmentId =
-        "Please select a department.";
-    }
-
     return newErrors;
   };
 
@@ -132,14 +102,7 @@ function RegisterComplaint() {
 
       const user = JSON.parse(storedUser);
 
-      /*
-       * Your login response should contain the citizen ID.
-       * Common possibilities:
-       * user.id
-       * user.citizenId
-       */
-      const citizenId =
-        user.citizenId || user.id;
+      const citizenId = user.citizenId || user.id;
 
       if (!citizenId) {
         throw new Error(
@@ -152,10 +115,8 @@ function RegisterComplaint() {
         description: formData.description.trim(),
         category: formData.category,
         location: formData.location.trim(),
-        priority: formData.priority,
         citizenId: Number(citizenId),
         status: "PENDING",
-        departmentId: Number(formData.departmentId),
       };
 
       console.log(
@@ -200,7 +161,7 @@ function RegisterComplaint() {
       );
 
       setSuccessMessage(
-        "Complaint registered successfully!"
+        "Complaint submitted successfully. Our system will automatically assign the department and assess urgency."
       );
 
       setFormData({
@@ -208,8 +169,6 @@ function RegisterComplaint() {
         description: "",
         category: "",
         location: "",
-        priority: "Low",
-        departmentId: "",
       });
 
     } catch (error) {
@@ -370,71 +329,6 @@ function RegisterComplaint() {
               {errors.location && (
                 <span className="error-text">
                   {errors.location}
-                </span>
-              )}
-            </div>
-
-            {/* Priority */}
-            <div className="form-group">
-              <label htmlFor="priority">
-                Priority
-              </label>
-
-              <select
-                id="priority"
-                name="priority"
-                value={formData.priority}
-                onChange={handleChange}
-              >
-                <option value="Low">
-                  Low
-                </option>
-
-                <option value="Medium">
-                  Medium
-                </option>
-
-                <option value="High">
-                  High
-                </option>
-              </select>
-
-              {errors.priority && (
-                <span className="error-text">
-                  {errors.priority}
-                </span>
-              )}
-            </div>
-
-            {/* Department */}
-            <div className="form-group">
-              <label htmlFor="departmentId">
-                Department
-              </label>
-
-              <select
-                id="departmentId"
-                name="departmentId"
-                value={formData.departmentId}
-                onChange={handleChange}
-              >
-                <option value="">
-                  Select Department
-                </option>
-
-                {departments.map((department) => (
-                  <option
-                    key={department.id}
-                    value={department.id}
-                  >
-                    {department.name}
-                  </option>
-                ))}
-              </select>
-
-              {errors.departmentId && (
-                <span className="error-text">
-                  {errors.departmentId}
                 </span>
               )}
             </div>

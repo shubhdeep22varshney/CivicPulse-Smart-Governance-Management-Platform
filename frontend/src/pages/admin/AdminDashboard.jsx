@@ -4,115 +4,134 @@ import AdminNavbar from "../../components/AdminNavbar";
 import RegisterOfficerModal from "../../components/RegisterOfficerModal";
 import "../../styles/AdminDashboard.css";
 
+const CANONICAL_HIGHLIGHTS_DEFAULT = [
+  { departmentCode: "ED", departmentName: "Emergency & Public Safety Department", high: 0, medium: 0, low: 0, total: 0 },
+  { departmentCode: "ESL", departmentName: "Electricity & Street Lighting", high: 0, medium: 0, low: 0, total: 0 },
+  { departmentCode: "PWI", departmentName: "Public Works & Infrastructure", high: 0, medium: 0, low: 0, total: 0 },
+  { departmentCode: "WSS", departmentName: "Water Supply & Sewerage", high: 0, medium: 0, low: 0, total: 0 },
+  { departmentCode: "SWM", departmentName: "Sanitation & Waste Management", high: 0, medium: 0, low: 0, total: 0 },
+  { departmentCode: "PHH", departmentName: "Public Health & Hygiene", high: 0, medium: 0, low: 0, total: 0 },
+  { departmentCode: "PE", departmentName: "Environment & Parks", high: 0, medium: 0, low: 0, total: 0 },
+  { departmentCode: "TT", departmentName: "Traffic & Transportation", high: 0, medium: 0, low: 0, total: 0 },
+  { departmentCode: "GAD", departmentName: "General Administration Department", high: 0, medium: 0, low: 0, total: 0 },
+];
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [isOfficerModalOpen, setIsOfficerModalOpen] = useState(false);
-   const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState({
-    totalComplaints: 1420,
-    pendingComplaints: 245,
-    inProgressComplaints: 371,
-    resolvedComplaints: 804,
+    totalComplaints: 0,
+    pendingComplaints: 0,
+    inProgressComplaints: 0,
+    resolvedComplaints: 0,
   });
+  const [departmentHighlights, setDepartmentHighlights] = useState(CANONICAL_HIGHLIGHTS_DEFAULT);
+  const [recentComplaints, setRecentComplaints] = useState([]);
   const [feedbackStats, setFeedbackStats] = useState(null);
+  const [apiError, setApiError] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:8081/api/reports/summary")
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
+    setLoading(true);
+
+    Promise.all([
+      fetch("http://localhost:8081/api/reports/summary").then((r) => (r.ok ? r.json() : null)).catch(() => null),
+      fetch("http://localhost:8081/api/complaints/priority-distribution").then((r) => (r.ok ? r.json() : null)).catch(() => null),
+      fetch("http://localhost:8081/api/complaints/priority-sorted").then((r) => (r.ok ? r.json() : [])).catch(() => []),
+      fetch("http://localhost:8081/api/feedback/stats").then((r) => (r.ok ? r.json() : null)).catch(() => null),
+    ])
+      .then(([summary, priorityDist, complaints, feedback]) => {
+        if (summary) {
+          setDashboardData({
+            totalComplaints: summary.totalComplaints || 0,
+            pendingComplaints: summary.pendingComplaints || 0,
+            inProgressComplaints: summary.inProgressComplaints || 0,
+            resolvedComplaints: summary.resolvedComplaints || 0,
+          });
         }
-        return fetch("http://localhost:8081/api/dashboard/stats").then((r) => r.ok ? r.json() : null);
-      })
-      .then((data) => {
-        if (data) {
-          setDashboardData(data);
+
+        if (priorityDist && Array.isArray(priorityDist.departments)) {
+          const map = {};
+          CANONICAL_HIGHLIGHTS_DEFAULT.forEach((d) => { map[d.departmentCode] = { ...d }; });
+          priorityDist.departments.forEach((item) => {
+            if (item && item.departmentCode) {
+              map[item.departmentCode] = {
+                departmentCode: item.departmentCode,
+                departmentName: item.departmentName || map[item.departmentCode]?.departmentName || item.departmentCode,
+                high: item.high || 0,
+                medium: item.medium || 0,
+                low: item.low || 0,
+                total: item.total || 0,
+              };
+            }
+          });
+          setDepartmentHighlights(Object.values(map));
         }
-        setLoading(false);
+
+        if (Array.isArray(complaints)) {
+          setRecentComplaints(complaints.slice(0, 5));
+        }
+
+        if (feedback) {
+          setFeedbackStats(feedback);
+        }
       })
-      .catch((error) => {
-        console.error("Report API error (using local mock analytics):", error);
+      .catch((err) => {
+        console.error("AdminDashboard API loading error:", err);
+        setApiError("Unable to fetch backend analytics. Showing default metrics.");
+      })
+      .finally(() => {
         setLoading(false);
       });
-
-    fetch("http://localhost:8081/api/feedback/stats")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => d && setFeedbackStats(d))
-      .catch(() => {});
   }, []);
 
   const getStatusClass = (status) => {
-    switch (status) {
-      case "Resolved":
-        return "status resolved";
-      case "In Progress":
-        return "status progress";
-      default:
-        return "status pending";
-    }
+    const s = String(status || "").toLowerCase();
+    if (s === "resolved") return "status resolved";
+    if (s === "in_progress" || s === "in progress") return "status progress";
+    return "status pending";
   };
 
   const stats = [
     {
       title: "Total Complaints",
-      value: dashboardData?.totalComplaints ?? 1420,
+      value: dashboardData?.totalComplaints ?? 0,
       description: "All complaints received",
     },
     {
       title: "Pending",
-      value: dashboardData?.pendingComplaints ?? 245,
+      value: dashboardData?.pendingComplaints ?? 0,
       description: "Waiting for action",
     },
     {
       title: "In Progress",
-      value: dashboardData?.inProgressComplaints ?? 371,
+      value: dashboardData?.inProgressComplaints ?? 0,
       description: "Currently being handled",
     },
     {
       title: "Resolved",
-      value: dashboardData?.resolvedComplaints ?? 804,
+      value: dashboardData?.resolvedComplaints ?? 0,
       description: "Successfully resolved",
     },
     {
       title: "Customer Rating",
-      value: feedbackStats?.averageRating ? `${feedbackStats.averageRating} ★` : "4.8 ★",
-      description: `From ${feedbackStats?.totalFeedbacks ?? 12} citizen reviews`,
+      value: feedbackStats?.averageRating ? `${feedbackStats.averageRating} ★` : "N/A",
+      description: feedbackStats?.totalFeedbacks ? `From ${feedbackStats.totalFeedbacks} citizen reviews` : "No reviews yet",
     },
   ];
 
-  const departmentHighlights = [
-    { code: "SWM", name: "Sanitation & Waste Management", pending: 42, inProgress: 68, resolved: 310, sla: "96.2%" },
-    { code: "PWI", name: "Public Works & Infrastructure", pending: 89, inProgress: 114, resolved: 245, sla: "88.5%" },
-    { code: "WSS", name: "Water Supply & Sewerage", pending: 31, inProgress: 56, resolved: 289, sla: "94.8%" },
-    { code: "ESL", name: "Electricity & Street Lighting", pending: 19, inProgress: 37, resolved: 342, sla: "98.1%" },
-  ];
-
-  const recentComplaints = [
-    {
-      id: "CMP-001",
-      category: "Road & Infrastructure",
-      location: "Ghaziabad",
-      status: "Pending",
-    },
-    {
-      id: "CMP-002",
-      category: "Water Supply",
-      location: "Noida",
-      status: "In Progress",
-    },
-    {
-      id: "CMP-003",
-      category: "Sanitation & Waste",
-      location: "Delhi",
-      status: "Resolved",
-    },
-    {
-      id: "CMP-004",
-      category: "Street Light",
-      location: "Ghaziabad",
-      status: "Pending",
-    },
-  ];
+  const getPriorityBadgeStyle = (priority) => {
+    switch (String(priority || "LOW").toUpperCase()) {
+      case "CRITICAL":
+        return { background: "#fee2e2", color: "#dc2626", padding: "2px 8px", borderRadius: "10px", fontSize: "11px", fontWeight: "800" };
+      case "HIGH":
+        return { background: "#ffedd5", color: "#ea580c", padding: "2px 8px", borderRadius: "10px", fontSize: "11px", fontWeight: "800" };
+      case "MEDIUM":
+        return { background: "#fef3c7", color: "#d97706", padding: "2px 8px", borderRadius: "10px", fontSize: "11px", fontWeight: "800" };
+      default:
+        return { background: "#dcfce7", color: "#16a34a", padding: "2px 8px", borderRadius: "10px", fontSize: "11px", fontWeight: "800" };
+    }
+  };
 
   return (
     <div>
@@ -153,6 +172,12 @@ const AdminDashboard = () => {
           onClose={() => setIsOfficerModalOpen(false)}
         />
 
+        {apiError && (
+          <div style={{ background: "#fef2f2", color: "#991b1b", padding: "12px 16px", borderRadius: "8px", border: "1px solid #fca5a5", marginBottom: "20px" }}>
+            ⚠️ {apiError}
+          </div>
+        )}
+
         {/* Overall Stats */}
         <section className="stats-grid">
           {stats.map((stat) => (
@@ -173,26 +198,26 @@ const AdminDashboard = () => {
           <div className="section-header">
             <div>
               <h2>Department-Wise Performance Summary</h2>
-              <p>Key operational metrics across active municipal departments</p>
+              <p>Key operational metrics across canonical municipal departments</p>
             </div>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", marginTop: "16px" }}>
             {departmentHighlights.map((dept) => (
-              <div key={dept.code} style={{ background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+              <div key={dept.departmentCode} style={{ background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                   <span style={{ fontWeight: "800", color: "#0369a1", background: "#e0f2fe", padding: "2px 8px", borderRadius: "6px", fontSize: "12px" }}>
-                    {dept.code}
+                    {dept.departmentCode}
                   </span>
-                  <small style={{ color: "#10b981", fontWeight: "700" }}>SLA {dept.sla}</small>
+                  <small style={{ color: "#ea580c", fontWeight: "700" }}>Vol: {dept.total || 0}</small>
                 </div>
                 <strong style={{ display: "block", fontSize: "14px", color: "#0f172a", marginBottom: "10px" }}>
-                  {dept.name}
+                  {dept.departmentName}
                 </strong>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#64748b" }}>
-                  <span>Pending: <strong style={{ color: "#ea580c" }}>{dept.pending}</strong></span>
-                  <span>Active: <strong style={{ color: "#0284c7" }}>{dept.inProgress}</strong></span>
-                  <span>Done: <strong style={{ color: "#10b981" }}>{dept.resolved}</strong></span>
+                  <span>High: <strong style={{ color: "#dc2626" }}>{dept.high || 0}</strong></span>
+                  <span>Med: <strong style={{ color: "#d97706" }}>{dept.medium || 0}</strong></span>
+                  <span>Low: <strong style={{ color: "#16a34a" }}>{dept.low || 0}</strong></span>
                 </div>
               </div>
             ))}
@@ -220,6 +245,7 @@ const AdminDashboard = () => {
               <thead>
                 <tr>
                   <th>Complaint ID</th>
+                  <th>Priority</th>
                   <th>Category</th>
                   <th>Location</th>
                   <th>Status</th>
@@ -227,18 +253,31 @@ const AdminDashboard = () => {
               </thead>
 
               <tbody>
-                {recentComplaints.map((complaint) => (
-                  <tr key={complaint.id}>
-                    <td>{complaint.id}</td>
-                    <td>{complaint.category}</td>
-                    <td>{complaint.location}</td>
-                    <td>
-                      <span className={getStatusClass(complaint.status)}>
-                        {complaint.status}
-                      </span>
+                {recentComplaints.length > 0 ? (
+                  recentComplaints.map((complaint) => (
+                    <tr key={complaint.id || complaint.title}>
+                      <td>#{complaint.id}</td>
+                      <td>
+                        <span style={getPriorityBadgeStyle(complaint.priority)}>
+                          {complaint.priority || "MEDIUM"}
+                        </span>
+                      </td>
+                      <td>{complaint.category || "General"}</td>
+                      <td>{complaint.location || "City Zone"}</td>
+                      <td>
+                        <span className={getStatusClass(complaint.status)}>
+                          {complaint.status || "Pending"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" style={{ textAlign: "center", color: "#64748b", padding: "20px" }}>
+                      No complaints registered yet.
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

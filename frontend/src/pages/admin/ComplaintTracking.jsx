@@ -112,8 +112,10 @@ const ComplaintTracking = () => {
                 </div>
 
                 <div>
-                  <span>Priority</span>
-                  <strong>{complaint.priority}</strong>
+                  <span>Priority & Score</span>
+                  <strong style={{ display: "inline-block", marginTop: "2px" }}>
+                    {complaint.priority || "MEDIUM"} {complaint.priorityScore !== undefined && complaint.priorityScore !== null ? `(${complaint.priorityScore} pts)` : ""}
+                  </strong>
                 </div>
 
                 <div>
@@ -131,6 +133,13 @@ const ComplaintTracking = () => {
                 <span>Description</span>
                 <p>{complaint.description}</p>
               </div>
+
+              {complaint.priorityBreakdown && (
+                <div className="description" style={{ background: "#f8fafc", padding: "12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                  <span>⚡ Priority Breakdown & Scoring</span>
+                  <p style={{ color: "#0369a1", fontWeight: "600", fontSize: "13px", margin: "4px 0 0 0" }}>{complaint.priorityBreakdown}</p>
+                </div>
+              )}
             </div>
 
             <div className="current-status">

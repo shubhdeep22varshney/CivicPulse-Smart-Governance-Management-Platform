@@ -44,8 +44,8 @@ function Navbar() {
             Home
           </Link>
 
-          {/* Citizen navigation - only after login */}
-          {currentUser && (
+          {/* Citizen navigation - only for logged-in citizens */}
+          {currentUser && (currentUser.role === "CITIZEN" || !currentUser.role) && (
             <>
               <Link to="/citizen/dashboard" className="nav-link">
                 Dashboard
@@ -71,20 +71,6 @@ function Navbar() {
                 Profile
               </Link>
             </>
-          )}
-
-          {/* Admin navigation */}
-          {currentUser?.role === "ADMIN" && (
-            <Link
-              to="/admin/dashboard"
-              className="nav-link"
-              style={{
-                color: "#0ea5a5",
-                fontWeight: "700",
-              }}
-            >
-              🏛️ Admin Portal
-            </Link>
           )}
 
         </div>

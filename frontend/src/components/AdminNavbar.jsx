@@ -34,11 +34,6 @@ const AdminNavbar = () => {
       icon: "📊",
     },
     {
-      label: "Department Reports",
-      path: "/admin/departments",
-      icon: "🏛️",
-    },
-    {
       label: "Manage Complaints",
       path: "/admin/complaints",
       icon: "📁",

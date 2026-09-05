@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.civicpulse.backend.dto.PriorityDistributionResponseDTO;
 import com.civicpulse.backend.entity.Complaint;
 import com.civicpulse.backend.service.ComplaintService;
 
@@ -26,6 +27,14 @@ public class ComplaintController {
 
     public ComplaintController(ComplaintService complaintService) {
         this.complaintService = complaintService;
+    }
+
+    // Get dynamic department priority distribution
+    @GetMapping("/priority-distribution")
+    public ResponseEntity<PriorityDistributionResponseDTO> getPriorityDistribution() {
+        return ResponseEntity.ok(
+                complaintService.getPriorityDistribution()
+        );
     }
 
     // Create a complaint
@@ -139,6 +148,38 @@ public class ComplaintController {
         return ResponseEntity.ok(
                 complaintService.resolveComplaint(id)
         );
+    }
+
+    // Get complaints sorted by priority
+    @GetMapping("/priority-sorted")
+    public ResponseEntity<List<Complaint>> getComplaintsSortedByPriority() {
+        return ResponseEntity.ok(
+                complaintService.getAllComplaintsSortedByPriority()
+        );
+    }
+
+    // Recalculate priority for a single complaint
+    @PutMapping("/{id}/recalculate-priority")
+    public ResponseEntity<Complaint> recalculatePriority(@PathVariable Long id) {
+        return ResponseEntity.ok(
+                complaintService.recalculatePriority(id)
+        );
+    }
+
+    // Recalculate priority for all complaints
+    @PostMapping("/recalculate-all")
+    public ResponseEntity<List<Complaint>> recalculateAllPriorities() {
+        return ResponseEntity.ok(
+                complaintService.recalculateAllPriorities()
+        );
+    }
+
+    // Get complaint priority breakdown detail
+    @GetMapping("/{id}/priority-breakdown")
+    public ResponseEntity<String> getPriorityBreakdown(@PathVariable Long id) {
+        return complaintService.getComplaintById(id)
+                .map(c -> ResponseEntity.ok(c.getPriorityBreakdown()))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     // Delete complaint

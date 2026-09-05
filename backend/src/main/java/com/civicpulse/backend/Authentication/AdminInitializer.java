@@ -1,10 +1,13 @@
 package com.civicpulse.backend.Authentication;
 
+import com.civicpulse.backend.entity.CanonicalDepartment;
 import com.civicpulse.backend.entity.Citizen;
+import com.civicpulse.backend.entity.Department;
 import com.civicpulse.backend.entity.DepartmentOfficer;
 import com.civicpulse.backend.entity.User;
 import com.civicpulse.backend.repository.CitizenRepository;
 import com.civicpulse.backend.repository.DepartmentOfficerRepository;
+import com.civicpulse.backend.repository.DepartmentRepository;
 import com.civicpulse.backend.repository.UserRepository;
 
 import org.springframework.boot.CommandLineRunner;
@@ -19,6 +22,7 @@ public class AdminInitializer {
     CommandLineRunner createAdmin(
             UserRepository userRepository,
             CitizenRepository citizenRepository,
+            DepartmentRepository departmentRepository,
             DepartmentOfficerRepository departmentOfficerRepository,
             PasswordEncoder passwordEncoder) {
 
@@ -33,13 +37,6 @@ public class AdminInitializer {
                 admin.setPassword(passwordEncoder.encode("Admin@123"));
                 admin.setRole("ADMIN");
                 userRepository.save(admin);
-
-                System.out.println("=================================");
-                System.out.println("ADMIN ACCOUNT SEEDED IN DB");
-                System.out.println("Email: " + adminEmail);
-                System.out.println("Password: Admin@123");
-                System.out.println("Role: ADMIN");
-                System.out.println("=================================");
             }
 
             // 2. Create Default Citizen User in 'users' and 'citizens' table
@@ -62,23 +59,33 @@ public class AdminInitializer {
                 citizenRecord.setAddress("Sector 15, Civic City");
                 citizenRecord.setRole("CITIZEN");
                 citizenRepository.save(citizenRecord);
-
-                System.out.println("=================================");
-                System.out.println("CITIZEN ACCOUNT SEEDED IN DB (USERS & CITIZENS TABLES)");
-                System.out.println("Email: " + citizenEmail);
-                System.out.println("Password: Citizen@123");
-                System.out.println("Role: CITIZEN");
-                System.out.println("=================================");
             }
 
-            // 3. Create Default Department Officers in 'department_officers' table
+            // 3. Seed Canonical Departments & Officers
             String encodedOfficerPassword = passwordEncoder.encode("Officer@123");
 
-            seedOfficer(departmentOfficerRepository, userRepository, "pwd@civicpulse.com", "Rajesh Sharma", "Public Works Department", "PWD", 1L, "9876500001", encodedOfficerPassword);
-            seedOfficer(departmentOfficerRepository, userRepository, "water@civicpulse.com", "Anita Verma", "Water Supply & Sewerage", "WATER", 2L, "9876500002", encodedOfficerPassword);
-            seedOfficer(departmentOfficerRepository, userRepository, "sanitation@civicpulse.com", "Vikram Singh", "Public Health & Sanitation", "SANITATION", 3L, "9876500003", encodedOfficerPassword);
-            seedOfficer(departmentOfficerRepository, userRepository, "officer@civicpulse.com", "General Department Officer", "Municipal Administration", "DEPT", 4L, "9876500000", encodedOfficerPassword);
+            for (CanonicalDepartment canonical : CanonicalDepartment.values()) {
+                // Seed Department record
+                Department dept = departmentRepository.findByDepartmentNameContainingIgnoreCase(canonical.getName())
+                        .orElseGet(() -> {
+                            Department d = new Department();
+                            d.setDepartmentName(canonical.getName());
+                            d.setDepartmentCode(canonical.getCode());
+                            d.setLocation("Central Municipal Zone");
+                            d.setPhone("1800-CIVIC-PULSE");
+                            return departmentRepository.save(d);
+                        });
 
+                if (dept.getDepartmentCode() == null || dept.getDepartmentCode().isBlank()) {
+                    dept.setDepartmentCode(canonical.getCode());
+                    departmentRepository.save(dept);
+                }
+
+                // Seed Department Officer record
+                seedOfficer(departmentOfficerRepository, userRepository, canonical.getDefaultEmail(),
+                        canonical.getName() + " Officer", canonical.getName(), canonical.getCode(),
+                        dept.getId(), "987650000" + dept.getId(), encodedOfficerPassword);
+            }
         };
     }
 
@@ -103,13 +110,6 @@ public class AdminInitializer {
             officer.setPhone(phone);
             officer.setRole("DEPARTMENT_OFFICER");
             deptRepo.save(officer);
-
-            System.out.println("=================================");
-            System.out.println("DEPARTMENT OFFICER SEEDED IN DB (department_officers)");
-            System.out.println("Email: " + email);
-            System.out.println("Password: Officer@123");
-            System.out.println("Department: " + deptName);
-            System.out.println("=================================");
         }
     }
 }

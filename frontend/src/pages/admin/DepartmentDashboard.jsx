@@ -4,128 +4,33 @@ import AdminNavbar from "../../components/AdminNavbar";
 import RegisterOfficerModal from "../../components/RegisterOfficerModal";
 import "../../styles/DepartmentDashboard.css";
 
-// Initial realistic fallback municipal department dataset
-const INITIAL_DEPARTMENTS = [
-  {
-    id: "swm",
-    name: "Sanitation & Waste Management",
-    code: "SWM",
-    head: "Rajesh Sharma",
-    contact: "swm@civicpulse.gov.in",
-    pending: 42,
-    inProgress: 68,
-    resolved: 310,
-    highPriority: 18,
-    medPriority: 32,
-    lowPriority: 60,
-    avgResolutionHours: 16.4,
-    slaCompliance: 96.2,
-    efficiencyRating: "A+",
-    recentActivity: "Clearance of main market waste dump completed. 5 new compactor trucks deployed.",
-  },
-  {
-    id: "pwi",
-    name: "Public Works & Infrastructure",
-    code: "PWI",
-    head: "Ananya Deshmukh",
-    contact: "pwi@civicpulse.gov.in",
-    pending: 89,
-    inProgress: 114,
-    resolved: 245,
-    highPriority: 45,
-    medPriority: 52,
-    lowPriority: 17,
-    avgResolutionHours: 42.8,
-    slaCompliance: 88.5,
-    efficiencyRating: "B+",
-    recentActivity: "Sector 14 pothole resurfacing in progress. Drainage widening ongoing.",
-  },
-  {
-    id: "wss",
-    name: "Water Supply & Sewerage",
-    code: "WSS",
-    head: "Vram Kishor",
-    contact: "water@civicpulse.gov.in",
-    pending: 31,
-    inProgress: 56,
-    resolved: 289,
-    highPriority: 24,
-    medPriority: 40,
-    lowPriority: 47,
-    avgResolutionHours: 19.2,
-    slaCompliance: 94.8,
-    efficiencyRating: "A",
-    recentActivity: "Pipeline repair near Block C completed. Pressure restored to normal.",
-  },
-  {
-    id: "esl",
-    name: "Electricity & Street Lighting",
-    code: "ESL",
-    head: "Sanjay Verma",
-    contact: "power@civicpulse.gov.in",
-    pending: 19,
-    inProgress: 37,
-    resolved: 342,
-    highPriority: 12,
-    medPriority: 22,
-    lowPriority: 65,
-    avgResolutionHours: 11.5,
-    slaCompliance: 98.1,
-    efficiencyRating: "A+",
-    recentActivity: "Replaced 120 LED streetlights along Expressway GT road.",
-  },
-  {
-    id: "phh",
-    name: "Public Health & Hygiene",
-    code: "PHH",
-    head: "Dr. Meera Nair",
-    contact: "health@civicpulse.gov.in",
-    pending: 27,
-    inProgress: 41,
-    resolved: 198,
-    highPriority: 15,
-    medPriority: 29,
-    lowPriority: 41,
-    avgResolutionHours: 21.0,
-    slaCompliance: 92.4,
-    efficiencyRating: "A",
-    recentActivity: "Mosquito fogging campaign completed across 14 residential zones.",
-  },
-  {
-    id: "pe",
-    name: "Environment & Parks",
-    code: "PE",
-    head: "Harpreet Singh",
-    contact: "parks@civicpulse.gov.in",
-    pending: 14,
-    inProgress: 23,
-    resolved: 165,
-    highPriority: 4,
-    medPriority: 18,
-    lowPriority: 63,
-    avgResolutionHours: 28.6,
-    slaCompliance: 95.0,
-    efficiencyRating: "A",
-    recentActivity: "Overhanging tree trimming in Ward 8. Central Park fountain restored.",
-  },
-  {
-    id: "tt",
-    name: "Traffic & Transportation",
-    code: "TT",
-    head: "Vikram Malhotra",
-    contact: "traffic@civicpulse.gov.in",
-    pending: 23,
-    inProgress: 38,
-    resolved: 182,
-    highPriority: 16,
-    medPriority: 27,
-    lowPriority: 35,
-    avgResolutionHours: 24.3,
-    slaCompliance: 91.7,
-    efficiencyRating: "A",
-    recentActivity: "Smart signal timer recalibrated at Sector 62 intersection.",
-  },
+// Initial realistic municipal department dataset (priority distribution fetched dynamically from API)
+// Canonical Municipal Departments dataset (counts & priority distribution fetched dynamically from backend DB)
+const CANONICAL_DEPARTMENTS = [
+  { id: "ed", code: "ED", name: "Emergency & Public Safety Department", head: "Emergency Command Officer", contact: "emergency@civicpulse.gov.in" },
+  { id: "esl", code: "ESL", name: "Electricity & Street Lighting", head: "Sanjay Verma", contact: "power@civicpulse.gov.in" },
+  { id: "pwi", code: "PWI", name: "Public Works & Infrastructure", head: "Ananya Deshmukh", contact: "pwd@civicpulse.gov.in" },
+  { id: "wss", code: "WSS", name: "Water Supply & Sewerage", head: "Vram Kishor", contact: "water@civicpulse.gov.in" },
+  { id: "swm", code: "SWM", name: "Sanitation & Waste Management", head: "Rajesh Sharma", contact: "swm@civicpulse.gov.in" },
+  { id: "phh", code: "PHH", name: "Public Health & Hygiene", head: "Dr. Meera Nair", contact: "health@civicpulse.gov.in" },
+  { id: "pe", code: "PE", name: "Environment & Parks", head: "Harpreet Singh", contact: "parks@civicpulse.gov.in" },
+  { id: "tt", code: "TT", name: "Traffic & Transportation", head: "Vikram Malhotra", contact: "traffic@civicpulse.gov.in" },
+  { id: "gad", code: "GAD", name: "General Administration Department", head: "General Officer", contact: "admin@civicpulse.gov.in" },
 ];
+
+const INITIAL_DEPARTMENTS = CANONICAL_DEPARTMENTS.map((d) => ({
+  ...d,
+  pending: 0,
+  inProgress: 0,
+  resolved: 0,
+  highPriority: 0,
+  medPriority: 0,
+  lowPriority: 0,
+  avgResolutionHours: "N/A",
+  slaCompliance: "N/A",
+  efficiencyRating: "N/A",
+  recentActivity: "No recent activity recorded",
+}));
 
 // Timeline historical data for trend line diagram
 const TIMELINE_DATA = [
@@ -153,74 +58,87 @@ const DepartmentDashboard = () => {
   const [tooltip, setTooltip] = useState({ show: false, x: 0, y: 0, text: "" });
   const [reportSummary, setReportSummary] = useState(null);
 
-  // Fetch API complaints, department records, and backend report summary
+  // Fetch API complaints, department records, priority distribution, and report summary
   useEffect(() => {
     Promise.all([
       fetch("http://localhost:8081/api/departments").then((r) => r.ok ? r.json() : []).catch(() => []),
       fetch("http://localhost:8081/api/complaints").then((r) => r.ok ? r.json() : []).catch(() => []),
+      fetch("http://localhost:8081/api/complaints/priority-distribution").then((r) => r.ok ? r.json() : null).catch(() => null),
       fetch("http://localhost:8081/api/reports/summary").then((r) => r.ok ? r.json() : null).catch(() => null),
     ])
-      .then(([apiDepartments, apiComplaints, apiReportSummary]) => {
+      .then(([apiDepartments, apiComplaints, apiPriorityDist, apiReportSummary]) => {
         if (apiReportSummary) {
           setReportSummary(apiReportSummary);
         }
-        let baseDepts = [...INITIAL_DEPARTMENTS];
 
-        // Merge API departments if returned from backend DB
-        if (Array.isArray(apiDepartments) && apiDepartments.length > 0) {
-          apiDepartments.forEach((dbDept) => {
-            const exists = baseDepts.some(
-              (d) => d.name.toLowerCase() === dbDept.departmentName?.toLowerCase() || d.id === String(dbDept.id)
-            );
-            if (!exists && dbDept.departmentName) {
-              const code = dbDept.departmentName.split(" ").map((w) => w[0]).join("").toUpperCase();
-              baseDepts.push({
-                id: String(dbDept.id),
-                name: dbDept.departmentName,
-                code: code || "DEPT",
-                head: "Department Head",
-                contact: dbDept.phone ? `Ph: ${dbDept.phone}` : `${code.toLowerCase()}@civicpulse.gov.in`,
-                pending: 0,
-                inProgress: 0,
-                resolved: 0,
-                highPriority: 5,
-                medPriority: 10,
-                lowPriority: 15,
-                avgResolutionHours: 24.0,
-                slaCompliance: 90.0,
-                efficiencyRating: "A",
-                recentActivity: `Active operations at ${dbDept.location || "Central Zone"}`,
-              });
+        const deptMap = {};
+        CANONICAL_DEPARTMENTS.forEach((d) => {
+          deptMap[d.code] = {
+            ...d,
+            pending: 0,
+            inProgress: 0,
+            resolved: 0,
+            highPriority: 0,
+            medPriority: 0,
+            lowPriority: 0,
+            avgResolutionHours: "N/A",
+            slaCompliance: "N/A",
+            efficiencyRating: "N/A",
+            recentActivity: "No recent activity recorded",
+          };
+        });
+
+        // Map live dynamic priority distribution from backend API
+        if (apiPriorityDist && Array.isArray(apiPriorityDist.departments)) {
+          apiPriorityDist.departments.forEach((item) => {
+            if (deptMap[item.departmentCode]) {
+              deptMap[item.departmentCode].highPriority = item.high || 0;
+              deptMap[item.departmentCode].medPriority = item.medium || 0;
+              deptMap[item.departmentCode].lowPriority = item.low || 0;
             }
           });
         }
 
-        if (Array.isArray(apiComplaints) && apiComplaints.length > 0) {
-          const deptMap = {};
-          baseDepts.forEach((d) => {
-            deptMap[d.name] = { ...d, pending: 0, inProgress: 0, resolved: 0 };
-          });
-
+        // Aggregate actual complaints from backend DB
+        if (Array.isArray(apiComplaints)) {
           apiComplaints.forEach((c) => {
-            const cat = c.category || "Sanitation & Waste Management";
-            const match = Object.keys(deptMap).find(
-              (k) => k.toLowerCase().includes(cat.toLowerCase()) || cat.toLowerCase().includes(k.toLowerCase())
-            );
-            const deptKey = match || baseDepts[0].name;
+            let code = c.departmentCode;
+            if (!code || !deptMap[code]) {
+              const cat = (c.category || "").toLowerCase();
+              if (cat.includes("fire") || cat.includes("emergency")) code = "ED";
+              else if (cat.includes("street light") || cat.includes("electricity")) code = "ESL";
+              else if (cat.includes("road")) code = "PWI";
+              else if (cat.includes("water") || cat.includes("drainage")) code = "WSS";
+              else if (cat.includes("sanitation") || cat.includes("garbage")) code = "SWM";
+              else code = "GAD";
+            }
 
-            const st = (c.status || "").toUpperCase();
-            if (st === "RESOLVED") deptMap[deptKey].resolved += 1;
-            else if (st === "IN_PROGRESS" || st === "IN PROGRESS") deptMap[deptKey].inProgress += 1;
-            else deptMap[deptKey].pending += 1;
+            if (deptMap[code]) {
+              const st = (c.status || "").toUpperCase();
+              if (st === "RESOLVED") deptMap[code].resolved += 1;
+              else if (st === "IN_PROGRESS" || st === "IN PROGRESS") deptMap[code].inProgress += 1;
+              else deptMap[code].pending += 1;
+            }
           });
-
-          setDepartments(Object.values(deptMap));
-        } else {
-          setDepartments(baseDepts);
         }
+
+        // Calculate dynamic SLA & Efficiency metrics
+        Object.values(deptMap).forEach((d) => {
+          const total = d.pending + d.inProgress + d.resolved;
+          if (total > 0) {
+            const resRate = ((d.resolved / total) * 100).toFixed(1);
+            d.slaCompliance = `${resRate}%`;
+            d.efficiencyRating = d.resolved > 0 ? (resRate >= 80 ? "A+" : resRate >= 50 ? "A" : "B") : "N/A";
+          } else {
+            d.slaCompliance = "N/A";
+            d.efficiencyRating = "N/A";
+          }
+        });
+
+        setDepartments(Object.values(deptMap));
       })
       .catch((err) => {
-        console.log("Using dynamic department analytics model:", err.message);
+        console.log("Department analytics error:", err.message);
       });
   }, []);
 
@@ -246,12 +164,8 @@ const DepartmentDashboard = () => {
     const inProgress = targetDepts.reduce((acc, curr) => acc + curr.inProgress, 0);
     const resolved = targetDepts.reduce((acc, curr) => acc + curr.resolved, 0);
     const total = pending + inProgress + resolved;
-    const avgSla = targetDepts.length > 0
-      ? (targetDepts.reduce((acc, curr) => acc + curr.slaCompliance, 0) / targetDepts.length).toFixed(1)
-      : 0;
-    const avgHours = targetDepts.length > 0
-      ? (targetDepts.reduce((acc, curr) => acc + curr.avgResolutionHours, 0) / targetDepts.length).toFixed(1)
-      : 0;
+    const avgSla = total > 0 ? `${((resolved / total) * 100).toFixed(1)}%` : "N/A";
+    const avgHours = "N/A";
 
     return { total, pending, inProgress, resolved, avgSla, avgHours };
   }, [departments, selectedDeptId]);
@@ -757,8 +671,8 @@ const DepartmentDashboard = () => {
               />
             </svg>
 
-            <div className="gauge-score-value">{aggregateStats.avgSla}%</div>
-            <div className="gauge-score-label">SLA Compliance Rate</div>
+            <div className="gauge-score-value">{aggregateStats.avgSla}</div>
+            <div className="gauge-score-label">SLA Closure Rate</div>
 
             <div className="gauge-stats-row">
               <div className="gauge-stat-item">

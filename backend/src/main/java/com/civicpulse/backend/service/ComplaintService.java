@@ -5,6 +5,13 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import com.civicpulse.backend.dto.DepartmentPriorityDistributionDTO;
+import com.civicpulse.backend.dto.PriorityCalculationResult;
+import com.civicpulse.backend.dto.PriorityDistributionResponseDTO;
 import com.civicpulse.backend.entity.Complaint;
 import com.civicpulse.backend.repository.ComplaintRepository;
 
@@ -13,13 +20,19 @@ public class ComplaintService {
 
     private final ComplaintRepository complaintRepository;
     private final NotificationService notificationService;
+    private final ComplaintPriorityService complaintPriorityService;
+    private final ComplaintDepartmentService complaintDepartmentService;
 
     public ComplaintService(
             ComplaintRepository complaintRepository,
-            NotificationService notificationService) {
+            NotificationService notificationService,
+            ComplaintPriorityService complaintPriorityService,
+            ComplaintDepartmentService complaintDepartmentService) {
 
         this.complaintRepository = complaintRepository;
         this.notificationService = notificationService;
+        this.complaintPriorityService = complaintPriorityService;
+        this.complaintDepartmentService = complaintDepartmentService;
     }
 
     // =========================================================
@@ -28,9 +41,33 @@ public class ComplaintService {
 
     public Complaint createComplaint(Complaint complaint) {
 
+        if (complaint.getCategory() == null || complaint.getCategory().trim().isEmpty()) {
+            throw new IllegalArgumentException("Complaint category is required.");
+        }
+
         if (complaint.getStatus() == null || complaint.getStatus().isBlank()) {
             complaint.setStatus("PENDING");
         }
+
+        // Automatically map Category -> Department (ignore any client-supplied departmentId)
+        var department = complaintDepartmentService.getDepartmentForCategory(complaint.getCategory());
+        complaint.setDepartmentId(department.getId());
+        complaint.setDepartmentCode(department.getDepartmentCode());
+        complaint.setDepartmentName(department.getDepartmentName());
+
+        // Count existing similar complaints for repeated complaint factor
+        long repeatedCount = 0;
+        if (complaint.getLocation() != null) {
+            repeatedCount = complaintRepository.countByCategoryIgnoreCaseAndLocationIgnoreCase(
+                    complaint.getCategory(), complaint.getLocation());
+        }
+
+        // Automatically calculate priority and score (ignore any user-submitted priority)
+        PriorityCalculationResult result = complaintPriorityService.calculatePriority(complaint, repeatedCount);
+        complaint.setPriority(result.getPriority().name());
+        complaint.setPriorityScore(result.getScore());
+        complaint.setPriorityBreakdown(result.getBreakdown());
+        complaint.setPriorityReason(result.getReason());
 
         Complaint savedComplaint = complaintRepository.save(complaint);
 
@@ -43,7 +80,7 @@ public class ComplaintService {
                     savedComplaint.getTitle(),
                     "Complaint Received",
                     "Your complaint \"" + savedComplaint.getTitle()
-                            + "\" has been successfully registered.",
+                            + "\" has been successfully registered with " + savedComplaint.getPriority() + " priority.",
                     "received"
             );
         }
@@ -56,7 +93,138 @@ public class ComplaintService {
     // =========================================================
 
     public List<Complaint> getAllComplaints() {
-        return complaintRepository.findAll();
+        return complaintRepository.findAllSortedByPriority();
+    }
+
+    public List<Complaint> getAllComplaintsSortedByPriority() {
+        return complaintRepository.findAllSortedByPriority();
+    }
+
+    // =========================================================
+    // DYNAMIC DEPARTMENT PRIORITY DISTRIBUTION API
+    // =========================================================
+
+    public PriorityDistributionResponseDTO getPriorityDistribution() {
+        List<Complaint> complaints = complaintRepository.findAll();
+
+        Map<String, DepartmentPriorityDistributionDTO> deptMap = new LinkedHashMap<>();
+        for (com.civicpulse.backend.entity.CanonicalDepartment cd : com.civicpulse.backend.entity.CanonicalDepartment.values()) {
+            deptMap.put(cd.getCode(), new DepartmentPriorityDistributionDTO(cd.getCode(), cd.getName(), 0, 0, 0));
+        }
+
+        for (Complaint c : complaints) {
+            String deptCode = c.getDepartmentCode();
+            if (deptCode == null || deptCode.isBlank()) {
+                var cd = com.civicpulse.backend.entity.CanonicalDepartment.fromCategory(c.getCategory());
+                deptCode = cd.getCode();
+            }
+
+            String finalCode = deptCode;
+            DepartmentPriorityDistributionDTO dto = deptMap.computeIfAbsent(deptCode, 
+                    code -> new DepartmentPriorityDistributionDTO(code, c.getDepartmentName() != null ? c.getDepartmentName() : "Department " + code, 0, 0, 0));
+
+            String priority = c.getPriority() != null ? c.getPriority().toUpperCase() : "LOW";
+            if ("HIGH".equals(priority) || "CRITICAL".equals(priority)) {
+                dto.setHigh(dto.getHigh() + 1);
+            } else if ("MEDIUM".equals(priority)) {
+                dto.setMedium(dto.getMedium() + 1);
+            } else {
+                dto.setLow(dto.getLow() + 1);
+            }
+            dto.setTotal(dto.getHigh() + dto.getMedium() + dto.getLow());
+        }
+
+        List<DepartmentPriorityDistributionDTO> resultList = new ArrayList<>(deptMap.values());
+        return new PriorityDistributionResponseDTO(resultList, complaints.size());
+    }
+
+    private String mapCategoryToDepartmentCode(String category, String title) {
+        String text = ((category != null ? category : "") + " " + (title != null ? title : "")).toLowerCase();
+        if (text.contains("sanitation") || text.contains("garbage") || text.contains("waste") || text.contains("drainage")) {
+            return "SWM";
+        }
+        if (text.contains("road") || text.contains("infrastructure") || text.contains("pothole") || text.contains("bridge")) {
+            return "PWI";
+        }
+        if (text.contains("water") || text.contains("sewerage") || text.contains("pipeline") || text.contains("leakage")) {
+            return "WSS";
+        }
+        if (text.contains("electricity") || text.contains("street light") || text.contains("light") || text.contains("power")) {
+            return "ESL";
+        }
+        if (text.contains("health") || text.contains("hygiene") || text.contains("hospital")) {
+            return "PHH";
+        }
+        if (text.contains("environment") || text.contains("park") || text.contains("tree") || text.contains("green")) {
+            return "PE";
+        }
+        if (text.contains("traffic") || text.contains("transport") || text.contains("signal")) {
+            return "TT";
+        }
+        return "SWM";
+    }
+
+    @org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
+    public void initDatabaseComplaintsPass() {
+        try {
+            recalculateAllPriorities();
+        } catch (Exception e) {
+            System.err.println("Database complaints recalculation pass error: " + e.getMessage());
+        }
+    }
+
+    // =========================================================
+    // RECALCULATE PRIORITY & CANONICAL DEPARTMENT
+    // =========================================================
+
+    public Complaint recalculatePriority(Long id) {
+        Complaint complaint = complaintRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Complaint not found"));
+
+        if (complaint.getCategory() != null && !complaint.getCategory().isBlank()) {
+            var department = complaintDepartmentService.getDepartmentForCategory(complaint.getCategory());
+            complaint.setDepartmentId(department.getId());
+            complaint.setDepartmentCode(department.getDepartmentCode());
+            complaint.setDepartmentName(department.getDepartmentName());
+        }
+
+        long repeatedCount = complaintRepository.countByCategoryIgnoreCaseAndLocationIgnoreCase(
+                complaint.getCategory(), complaint.getLocation());
+        if (repeatedCount > 0) {
+            repeatedCount -= 1; // Exclude current complaint itself
+        }
+
+        PriorityCalculationResult result = complaintPriorityService.calculatePriority(complaint, repeatedCount);
+        complaint.setPriority(result.getPriority().name());
+        complaint.setPriorityScore(result.getScore());
+        complaint.setPriorityBreakdown(result.getBreakdown());
+        complaint.setPriorityReason(result.getReason());
+
+        return complaintRepository.save(complaint);
+    }
+
+    public List<Complaint> recalculateAllPriorities() {
+        List<Complaint> complaints = complaintRepository.findAll();
+        for (Complaint c : complaints) {
+            if (c.getCategory() != null && !c.getCategory().isBlank()) {
+                var department = complaintDepartmentService.getDepartmentForCategory(c.getCategory());
+                c.setDepartmentId(department.getId());
+                c.setDepartmentCode(department.getDepartmentCode());
+                c.setDepartmentName(department.getDepartmentName());
+            }
+
+            long repeatedCount = complaintRepository.countByCategoryIgnoreCaseAndLocationIgnoreCase(
+                    c.getCategory(), c.getLocation());
+            if (repeatedCount > 0) {
+                repeatedCount -= 1;
+            }
+            PriorityCalculationResult result = complaintPriorityService.calculatePriority(c, repeatedCount);
+            c.setPriority(result.getPriority().name());
+            c.setPriorityScore(result.getScore());
+            c.setPriorityBreakdown(result.getBreakdown());
+            c.setPriorityReason(result.getReason());
+        }
+        return complaintRepository.saveAll(complaints);
     }
 
     // =========================================================
@@ -114,9 +282,30 @@ public class ComplaintService {
         existingComplaint.setDescription(updatedComplaint.getDescription());
         existingComplaint.setCategory(updatedComplaint.getCategory());
         existingComplaint.setLocation(updatedComplaint.getLocation());
-        existingComplaint.setPriority(updatedComplaint.getPriority());
         existingComplaint.setStatus(updatedComplaint.getStatus());
-        existingComplaint.setDepartmentId(updatedComplaint.getDepartmentId());
+
+        if (existingComplaint.getCategory() != null && !existingComplaint.getCategory().isBlank()) {
+            var department = complaintDepartmentService.getDepartmentForCategory(existingComplaint.getCategory());
+            existingComplaint.setDepartmentId(department.getId());
+            existingComplaint.setDepartmentCode(department.getDepartmentCode());
+            existingComplaint.setDepartmentName(department.getDepartmentName());
+        }
+
+        if (updatedComplaint.getSeverity() != null) existingComplaint.setSeverity(updatedComplaint.getSeverity());
+        if (updatedComplaint.getAffectedPeople() != null) existingComplaint.setAffectedPeople(updatedComplaint.getAffectedPeople());
+        if (updatedComplaint.getSafetyRisk() != null) existingComplaint.setSafetyRisk(updatedComplaint.getSafetyRisk());
+        if (updatedComplaint.getIsPublicLocation() != null) existingComplaint.setIsPublicLocation(updatedComplaint.getIsPublicLocation());
+
+        long repeatedCount = complaintRepository.countByCategoryIgnoreCaseAndLocationIgnoreCase(
+                existingComplaint.getCategory(), existingComplaint.getLocation());
+        if (repeatedCount > 0) {
+            repeatedCount -= 1;
+        }
+
+        PriorityCalculationResult result = complaintPriorityService.calculatePriority(existingComplaint, repeatedCount);
+        existingComplaint.setPriority(result.getPriority().name());
+        existingComplaint.setPriorityScore(result.getScore());
+        existingComplaint.setPriorityBreakdown(result.getBreakdown());
 
         Complaint savedComplaint = complaintRepository.save(existingComplaint);
 
