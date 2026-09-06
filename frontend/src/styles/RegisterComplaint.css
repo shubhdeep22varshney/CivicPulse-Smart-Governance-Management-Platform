@@ -222,3 +222,124 @@
     width: 100%;
   }
 }
+/* =========================================
+   SUCCESS / DUPLICATE MESSAGE BOX
+   ========================================= */
+
+.success-box,
+.error-box {
+  margin: 20px 0;
+  padding: 28px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+/* Successful submission */
+.success-box {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+}
+
+.success-box h2 {
+  margin: 0 0 12px;
+  color: #166534;
+  font-size: 24px;
+}
+
+.success-box p {
+  margin: 0 auto 22px;
+  color: #374151;
+  line-height: 1.6;
+  max-width: 650px;
+}
+
+
+/* Duplicate complaint */
+.error-box {
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+}
+
+.error-box h2 {
+  margin: 0 0 12px;
+  color: #c2410c;
+  font-size: 24px;
+}
+
+.error-box p {
+  margin: 0 auto 22px;
+  color: #374151;
+  line-height: 1.6;
+  max-width: 650px;
+}
+
+
+/* =========================================
+   SUCCESS / DUPLICATE ACTION BUTTONS
+   ========================================= */
+
+.success-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.success-actions button {
+  border: none;
+  border-radius: 8px;
+  padding: 12px 22px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* First button */
+.success-actions button:first-child {
+  background: #2563eb;
+  color: white;
+}
+
+.success-actions button:first-child:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+/* Second button */
+.success-actions button:last-child {
+  background: #374151;
+  color: white;
+}
+
+.success-actions button:last-child:hover {
+  background: #1f2937;
+  transform: translateY(-1px);
+}
+
+
+/* =========================================
+   MOBILE
+   ========================================= */
+
+@media (max-width: 600px) {
+  .success-box,
+  .error-box {
+    padding: 22px 16px;
+  }
+
+  .success-box h2,
+  .error-box h2 {
+    font-size: 20px;
+  }
+
+  .success-actions {
+    flex-direction: column;
+  }
+
+  .success-actions button {
+    width: 100%;
+    max-width: 280px;
+  }
+}

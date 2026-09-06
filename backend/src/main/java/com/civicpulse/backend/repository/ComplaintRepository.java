@@ -20,7 +20,8 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
     List<Complaint> findByCitizenIdAndStatus(Long citizenId, String status);
 
     long countByCategoryIgnoreCaseAndLocationIgnoreCase(String category, String location);
-
+    List<Complaint> findByCategoryIgnoreCaseAndLocationIgnoreCase(String category,String location);
+    
     @Query("""
         SELECT c FROM Complaint c
         ORDER BY CASE UPPER(c.priority)

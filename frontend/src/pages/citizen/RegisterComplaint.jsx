@@ -16,6 +16,7 @@ function RegisterComplaint() {
 
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
+  const [duplicateMessage, setDuplicateMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const categories = [
@@ -45,6 +46,7 @@ function RegisterComplaint() {
     }));
 
     setSuccessMessage("");
+    setDuplicateMessage("");
   };
 
   const validate = () => {
@@ -80,6 +82,7 @@ function RegisterComplaint() {
 
     setErrors({});
     setSuccessMessage("");
+    setDuplicateMessage("");
 
     const validationErrors = validate();
 
@@ -149,10 +152,29 @@ function RegisterComplaint() {
       }
 
       if (!response.ok) {
-        throw new Error(
+
+        const message =
           data.message ||
-            "Unable to register complaint."
-        );
+          data.error ||
+          "Unable to register complaint.";
+
+        // Duplicate complaint detected
+        if (
+          message.toLowerCase().includes("duplicate") ||
+          message.toLowerCase().includes("similarity")
+        ) {
+          setDuplicateMessage(message);
+          setFormData({
+            title: "",
+            description: "",
+            category: "",
+            location: "",
+          });
+
+          return;
+        }
+
+        throw new Error(message);
       }
 
       console.log(
@@ -219,148 +241,183 @@ function RegisterComplaint() {
 
           {successMessage && (
             <div className="success-box">
-              ✅ {successMessage}
+              <h2>✅ Complaint Submitted Successfully</h2>
+
+              <p>{successMessage}</p>
+
+              <div className="success-actions">
+                <button
+                  type="button"
+                  onClick={() => navigate("/track-complaint")}
+                >
+                  Track Complaint
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => navigate("/citizen/dashboard")}
+                >
+                  Back to Dashboard
+                </button>
+              </div>
             </div>
           )}
 
-          {errors.submit && (
+          {duplicateMessage && !successMessage && (
             <div className="error-box">
-              {errors.submit}
+              <h2>⚠️ Duplicate Complaint Detected</h2>
+
+              <p>{duplicateMessage}</p>
+
+              <div className="success-actions">
+                <button
+                  type="button"
+                  onClick={() => navigate("/track-complaint")}
+                >
+                  View My Complaints
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setDuplicateMessage("")}
+                >
+                  Submit Different Complaint
+                </button>
+              </div>
             </div>
           )}
 
-          <form
-            onSubmit={handleSubmit}
-            noValidate
-          >
+          {!successMessage && !duplicateMessage && (
+            <form onSubmit={handleSubmit} noValidate>
 
-            {/* Title */}
-            <div className="form-group">
-              <label htmlFor="title">
-                Complaint Title
-              </label>
+              {/* Title */}
+              <div className="form-group">
+                <label htmlFor="title">
+                  Complaint Title
+                </label>
 
-              <input
-                type="text"
-                id="title"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                placeholder="e.g. Street Light Not Working"
-              />
+                <input
+                  type="text"
+                  id="title"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  placeholder="e.g. Street Light Not Working"
+                />
 
-              {errors.title && (
-                <span className="error-text">
-                  {errors.title}
-                </span>
-              )}
-            </div>
+                {errors.title && (
+                  <span className="error-text">
+                    {errors.title}
+                  </span>
+                )}
+              </div>
 
-            {/* Description */}
-            <div className="form-group">
-              <label htmlFor="description">
-                Description
-              </label>
+              {/* Description */}
+              <div className="form-group">
+                <label htmlFor="description">
+                  Description
+                </label>
 
-              <textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                placeholder="Describe the civic issue in detail..."
-                rows="5"
-              />
+                <textarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  placeholder="Describe the civic issue in detail..."
+                  rows="5"
+                />
 
-              {errors.description && (
-                <span className="error-text">
-                  {errors.description}
-                </span>
-              )}
-            </div>
+                {errors.description && (
+                  <span className="error-text">
+                    {errors.description}
+                  </span>
+                )}
+              </div>
 
-            {/* Category */}
-            <div className="form-group">
-              <label htmlFor="category">
-                Category
-              </label>
+              {/* Category */}
+              <div className="form-group">
+                <label htmlFor="category">
+                  Category
+                </label>
 
-              <select
-                id="category"
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-              >
-                <option value="">
-                  Select Category
-                </option>
-
-                {categories.map((category) => (
-                  <option
-                    key={category}
-                    value={category}
-                  >
-                    {category}
+                <select
+                  id="category"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                >
+                  <option value="">
+                    Select Category
                   </option>
-                ))}
-              </select>
 
-              {errors.category && (
-                <span className="error-text">
-                  {errors.category}
-                </span>
-              )}
-            </div>
+                  {categories.map((category) => (
+                    <option
+                      key={category}
+                      value={category}
+                    >
+                      {category}
+                    </option>
+                  ))}
+                </select>
 
-            {/* Location */}
-            <div className="form-group">
-              <label htmlFor="location">
-                Location
-              </label>
+                {errors.category && (
+                  <span className="error-text">
+                    {errors.category}
+                  </span>
+                )}
+              </div>
 
-              <input
-                type="text"
-                id="location"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                placeholder="e.g. Ghaziabad"
-              />
+              {/* Location */}
+              <div className="form-group">
+                <label htmlFor="location">
+                  Location
+                </label>
 
-              {errors.location && (
-                <span className="error-text">
-                  {errors.location}
-                </span>
-              )}
-            </div>
+                <input
+                  type="text"
+                  id="location"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  placeholder="e.g. Ghaziabad"
+                />
 
-            {/* Buttons */}
-            <div className="complaint-form-actions">
+                {errors.location && (
+                  <span className="error-text">
+                    {errors.location}
+                  </span>
+                )}
+              </div>
 
-              <button
-                type="button"
-                className="btn-cancel"
-                onClick={() =>
-                  navigate(
-                    "/citizen/dashboard"
-                  )
-                }
-              >
-                Cancel
-              </button>
+              {/* Buttons */}
+              <div className="complaint-form-actions">
 
-              <button
-                type="submit"
-                className="btn-submit"
-                disabled={isLoading}
-              >
-                {isLoading
-                  ? "Submitting..."
-                  : "Submit Complaint"}
-              </button>
+                <button
+                  type="button"
+                  className="btn-cancel"
+                  onClick={() =>
+                    navigate(
+                      "/citizen/dashboard"
+                    )
+                  }
+                >
+                  Cancel
+                </button>
 
-            </div>
+                <button
+                  type="submit"
+                  className="btn-submit"
+                  disabled={isLoading}
+                >
+                  {isLoading
+                    ? "Submitting..."
+                    : "Submit Complaint"}
+                </button>
 
-          </form>
+              </div>
+
+            </form>
+          )}
         </section>
 
       </main>

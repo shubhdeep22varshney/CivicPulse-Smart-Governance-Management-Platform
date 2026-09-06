@@ -1,13 +1,12 @@
 package com.civicpulse.backend.service;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import com.civicpulse.backend.dto.DepartmentPriorityDistributionDTO;
 import com.civicpulse.backend.dto.PriorityCalculationResult;
@@ -38,7 +37,6 @@ public class ComplaintService {
     // =========================================================
     // CREATE COMPLAINT
     // =========================================================
-
     public Complaint createComplaint(Complaint complaint) {
 
         if (complaint.getCategory() == null || complaint.getCategory().trim().isEmpty()) {
@@ -55,11 +53,57 @@ public class ComplaintService {
         complaint.setDepartmentCode(department.getDepartmentCode());
         complaint.setDepartmentName(department.getDepartmentName());
 
-        // Count existing similar complaints for repeated complaint factor
+        // =========================================================
+// DUPLICATE COMPLAINT DETECTION
+// =========================================================
+        if (complaint.getLocation() != null
+                && complaint.getTitle() != null
+                && complaint.getDescription() != null) {
+
+            List<Complaint> existingComplaints
+                    = complaintRepository.findByCategoryIgnoreCaseAndLocationIgnoreCase(
+                            complaint.getCategory(),
+                            complaint.getLocation());
+
+            for (Complaint existing : existingComplaints) {
+
+                double titleSimilarity
+                        = calculateSimilarity(
+                                complaint.getTitle(),
+                                existing.getTitle());
+
+                double descriptionSimilarity
+                        = calculateSimilarity(
+                                complaint.getDescription(),
+                                existing.getDescription());
+
+                // Weighted similarity
+                double similarityScore
+                        = (titleSimilarity * 0.4)
+                        + (descriptionSimilarity * 0.6);
+
+                if (similarityScore >= 0.70) {
+
+                    throw new IllegalArgumentException(
+                            "Possible duplicate complaint detected. "
+                            + "Existing complaint ID: "
+                            + existing.getId()
+                            + ". Similarity: "
+                            + Math.round(similarityScore * 100)
+                            + "%"
+                    );
+                }
+            }
+        }
+
+// Count existing complaints for repeated complaint factor
         long repeatedCount = 0;
+
         if (complaint.getLocation() != null) {
-            repeatedCount = complaintRepository.countByCategoryIgnoreCaseAndLocationIgnoreCase(
-                    complaint.getCategory(), complaint.getLocation());
+            repeatedCount
+                    = complaintRepository.countByCategoryIgnoreCaseAndLocationIgnoreCase(
+                            complaint.getCategory(),
+                            complaint.getLocation());
         }
 
         // Automatically calculate priority and score (ignore any user-submitted priority)
@@ -80,7 +124,7 @@ public class ComplaintService {
                     savedComplaint.getTitle(),
                     "Complaint Received",
                     "Your complaint \"" + savedComplaint.getTitle()
-                            + "\" has been successfully registered with " + savedComplaint.getPriority() + " priority.",
+                    + "\" has been successfully registered with " + savedComplaint.getPriority() + " priority.",
                     "received"
             );
         }
@@ -91,7 +135,6 @@ public class ComplaintService {
     // =========================================================
     // GET ALL COMPLAINTS
     // =========================================================
-
     public List<Complaint> getAllComplaints() {
         return complaintRepository.findAllSortedByPriority();
     }
@@ -103,7 +146,6 @@ public class ComplaintService {
     // =========================================================
     // DYNAMIC DEPARTMENT PRIORITY DISTRIBUTION API
     // =========================================================
-
     public PriorityDistributionResponseDTO getPriorityDistribution() {
         List<Complaint> complaints = complaintRepository.findAll();
 
@@ -120,7 +162,7 @@ public class ComplaintService {
             }
 
             String finalCode = deptCode;
-            DepartmentPriorityDistributionDTO dto = deptMap.computeIfAbsent(deptCode, 
+            DepartmentPriorityDistributionDTO dto = deptMap.computeIfAbsent(deptCode,
                     code -> new DepartmentPriorityDistributionDTO(code, c.getDepartmentName() != null ? c.getDepartmentName() : "Department " + code, 0, 0, 0));
 
             String priority = c.getPriority() != null ? c.getPriority().toUpperCase() : "LOW";
@@ -176,7 +218,6 @@ public class ComplaintService {
     // =========================================================
     // RECALCULATE PRIORITY & CANONICAL DEPARTMENT
     // =========================================================
-
     public Complaint recalculatePriority(Long id) {
         Complaint complaint = complaintRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Complaint not found"));
@@ -230,7 +271,6 @@ public class ComplaintService {
     // =========================================================
     // GET COMPLAINTS BY CITIZEN
     // =========================================================
-
     public List<Complaint> getComplaintsByCitizenId(Long citizenId) {
         return complaintRepository.findByCitizenId(citizenId);
     }
@@ -238,7 +278,6 @@ public class ComplaintService {
     // =========================================================
     // GET COMPLAINTS BY DEPARTMENT
     // =========================================================
-
     public List<Complaint> getComplaintsByDepartmentId(Long departmentId) {
         return complaintRepository.findByDepartmentId(departmentId);
     }
@@ -246,7 +285,6 @@ public class ComplaintService {
     // =========================================================
     // GET COMPLAINTS BY STATUS
     // =========================================================
-
     public List<Complaint> getComplaintsByStatus(String status) {
         return complaintRepository.findByStatus(status);
     }
@@ -254,7 +292,6 @@ public class ComplaintService {
     // =========================================================
     // GET COMPLAINTS BY PRIORITY
     // =========================================================
-
     public List<Complaint> getComplaintsByPriority(String priority) {
         return complaintRepository.findByPriority(priority);
     }
@@ -262,7 +299,6 @@ public class ComplaintService {
     // =========================================================
     // GET COMPLAINT BY ID
     // =========================================================
-
     public Optional<Complaint> getComplaintById(Long id) {
         return complaintRepository.findById(id);
     }
@@ -270,7 +306,6 @@ public class ComplaintService {
     // =========================================================
     // UPDATE COMPLAINT
     // =========================================================
-
     public Complaint updateComplaint(Long id, Complaint updatedComplaint) {
 
         Complaint existingComplaint = complaintRepository.findById(id)
@@ -291,10 +326,18 @@ public class ComplaintService {
             existingComplaint.setDepartmentName(department.getDepartmentName());
         }
 
-        if (updatedComplaint.getSeverity() != null) existingComplaint.setSeverity(updatedComplaint.getSeverity());
-        if (updatedComplaint.getAffectedPeople() != null) existingComplaint.setAffectedPeople(updatedComplaint.getAffectedPeople());
-        if (updatedComplaint.getSafetyRisk() != null) existingComplaint.setSafetyRisk(updatedComplaint.getSafetyRisk());
-        if (updatedComplaint.getIsPublicLocation() != null) existingComplaint.setIsPublicLocation(updatedComplaint.getIsPublicLocation());
+        if (updatedComplaint.getSeverity() != null) {
+            existingComplaint.setSeverity(updatedComplaint.getSeverity());
+        }
+        if (updatedComplaint.getAffectedPeople() != null) {
+            existingComplaint.setAffectedPeople(updatedComplaint.getAffectedPeople());
+        }
+        if (updatedComplaint.getSafetyRisk() != null) {
+            existingComplaint.setSafetyRisk(updatedComplaint.getSafetyRisk());
+        }
+        if (updatedComplaint.getIsPublicLocation() != null) {
+            existingComplaint.setIsPublicLocation(updatedComplaint.getIsPublicLocation());
+        }
 
         long repeatedCount = complaintRepository.countByCategoryIgnoreCaseAndLocationIgnoreCase(
                 existingComplaint.getCategory(), existingComplaint.getLocation());
@@ -323,7 +366,6 @@ public class ComplaintService {
     // =========================================================
     // UPDATE COMPLAINT STATUS
     // =========================================================
-
     public Complaint updateComplaintStatus(Long id, String status) {
 
         Complaint complaint = complaintRepository.findById(id)
@@ -348,7 +390,6 @@ public class ComplaintService {
     // =========================================================
     // ASSIGN DEPARTMENT
     // =========================================================
-
     public Complaint assignDepartment(Long id, Long departmentId) {
 
         Complaint complaint = complaintRepository.findById(id)
@@ -362,7 +403,6 @@ public class ComplaintService {
     // =========================================================
     // RESOLVE COMPLAINT
     // =========================================================
-
     public Complaint resolveComplaint(Long id) {
 
         Complaint complaint = complaintRepository.findById(id)
@@ -384,7 +424,7 @@ public class ComplaintService {
                     savedComplaint.getTitle(),
                     "Complaint Resolved",
                     "Your complaint \"" + savedComplaint.getTitle()
-                            + "\" has been resolved.",
+                    + "\" has been resolved.",
                     "resolved"
             );
         }
@@ -395,7 +435,6 @@ public class ComplaintService {
     // =========================================================
     // DELETE COMPLAINT
     // =========================================================
-
     public void deleteComplaint(Long id) {
         complaintRepository.deleteById(id);
     }
@@ -403,7 +442,6 @@ public class ComplaintService {
     // =========================================================
     // STATUS NOTIFICATION
     // =========================================================
-
     private void createStatusNotification(Complaint complaint) {
 
         String status = complaint.getStatus();
@@ -472,5 +510,46 @@ public class ComplaintService {
         }
 
         return first.equalsIgnoreCase(second);
+    }
+
+    private double calculateSimilarity(String text1, String text2) {
+
+        if (text1 == null || text2 == null) {
+            return 0.0;
+        }
+
+        String[] words1 = normalizeText(text1).split("\\s+");
+        String[] words2 = normalizeText(text2).split("\\s+");
+
+        java.util.Set<String> set1
+                = new java.util.HashSet<>(java.util.Arrays.asList(words1));
+
+        java.util.Set<String> set2
+                = new java.util.HashSet<>(java.util.Arrays.asList(words2));
+
+        if (set1.isEmpty() || set2.isEmpty()) {
+            return 0.0;
+        }
+
+        java.util.Set<String> intersection
+                = new java.util.HashSet<>(set1);
+
+        intersection.retainAll(set2);
+
+        java.util.Set<String> union
+                = new java.util.HashSet<>(set1);
+
+        union.addAll(set2);
+
+        return (double) intersection.size() / union.size();
+    }
+
+    private String normalizeText(String text) {
+
+        return text
+                .toLowerCase()
+                .replaceAll("[^a-z0-9\\s]", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
     }
 }
