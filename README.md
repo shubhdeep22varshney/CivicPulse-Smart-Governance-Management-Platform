@@ -2,7 +2,7 @@
 
 ## Milestone-1
 * **Riya Kumari:** You need to take Slides 2–4.
-* **Asmi:** Slides 5–7.
+* **Shamiha Asmi:** Slides 5–7.
 * **Sanjana Nitnavare:** Slides 8–10.
 * **Shubhdeep Varshney:** Slides 11–13.
 
