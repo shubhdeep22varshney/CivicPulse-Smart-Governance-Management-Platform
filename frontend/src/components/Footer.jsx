@@ -30,13 +30,13 @@ function Footer() {
 
         <div className="footer-col">
           <h4>Contact</h4>
-          <p className="footer-text">support@civicpulse.gov.in (demo)</p>
-          <p className="footer-text">Helpline: 1800-XXX-XXXX (demo)</p>
+          <p className="footer-text">support@civicpulse.gov.in</p>
+          <p className="footer-text">Helpline: 1800-XXX-XXXX</p>
         </div>
       </div>
 
       <div className="footer-bottom">
-        <p>© {new Date().getFullYear()} CivicPulse — College Project (Demo Data Only)</p>
+        <p>© {new Date().getFullYear()} CivicPulse</p>
       </div>
     </footer>
   );

@@ -27,6 +27,15 @@ function RoleSelect() {
           </div>
 
           <div className="role-card">
+            <span className="role-icon">🏛️</span>
+            <h2>Department Officer</h2>
+            <p>Access department complaints matrix & reports</p>
+            <Link to="/department/login" className="btn btn-primary-large">
+              Officer Login
+            </Link>
+          </div>
+
+          <div className="role-card">
             <span className="role-icon">🛡️</span>
             <h2>Admin</h2>
             <p>Manage complaints and civic services</p>

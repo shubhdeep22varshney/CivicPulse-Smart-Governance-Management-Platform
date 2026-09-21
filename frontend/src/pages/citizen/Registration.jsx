@@ -5,7 +5,6 @@ import Footer from "../../components/Footer";
 import "../../styles/Registration.css";
 
 function Registration() {
-  // One object holds all form fields — simpler than 6 separate useState calls
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -19,86 +18,192 @@ function Registration() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Runs on every keystroke in any input
+  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Keep only digits for phone number
+    const updatedValue =
+      name === "phone"
+        ? value.replace(/\D/g, "").slice(0, 10)
+        : value;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: updatedValue,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+      submit: "",
+    }));
+
+    setSuccessMessage("");
   };
 
-  // Very simple strength check: length + variety of characters used
+  // Password strength checker
   const getPasswordStrength = (password) => {
-    if (password.length === 0) return { label: "", percent: 0, color: "" };
+    if (password.length === 0) {
+      return {
+        label: "",
+        percent: 0,
+        color: "",
+      };
+    }
 
     let score = 0;
+
     if (password.length >= 8) score++;
     if (/[A-Z]/.test(password)) score++;
     if (/[0-9]/.test(password)) score++;
     if (/[^A-Za-z0-9]/.test(password)) score++;
 
-    if (score <= 1) return { label: "Weak", percent: 33, color: "var(--danger)" };
-    if (score <= 3) return { label: "Medium", percent: 66, color: "var(--warning)" };
-    return { label: "Strong", percent: 100, color: "var(--success)" };
+    if (score <= 1) {
+      return {
+        label: "Weak",
+        percent: 33,
+        color: "var(--danger)",
+      };
+    }
+
+    if (score <= 3) {
+      return {
+        label: "Medium",
+        percent: 66,
+        color: "var(--warning)",
+      };
+    }
+
+    return {
+      label: "Strong",
+      percent: 100,
+      color: "var(--success)",
+    };
   };
 
   const strength = getPasswordStrength(formData.password);
 
-  // Checks every field and builds an errors object
+  // Form validation
   const validate = () => {
     const newErrors = {};
 
+    // Full Name
     if (!formData.fullName.trim()) {
       newErrors.fullName = "Full name is required.";
     } else if (formData.fullName.trim().length < 3) {
-      newErrors.fullName = "Full name must be at least 3 characters.";
+      newErrors.fullName =
+        "Full name must be at least 3 characters.";
     }
 
+    // Email
     if (!formData.email.trim()) {
       newErrors.email = "Email is required.";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    } else if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+        formData.email.trim()
+      )
+    ) {
       newErrors.email = "Enter a valid email address.";
     }
 
-    if (!formData.phone.trim()) {
+    // Phone
+    const phone = formData.phone.replace(/\D/g, "");
+
+    if (!phone) {
       newErrors.phone = "Phone number is required.";
-    } else if (!/^[6-9]\d{9}$/.test(formData.phone)) {
-      newErrors.phone = "Enter a valid 10-digit phone number.";
+    } else if (!/^[6-9][0-9]{9}$/.test(phone)) {
+      newErrors.phone =
+        "Enter a valid 10-digit phone number.";
     }
 
+    // Address
     if (!formData.address.trim()) {
       newErrors.address = "Address is required.";
     }
 
+    // Password
     if (!formData.password) {
       newErrors.password = "Password is required.";
     } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters.";
+      newErrors.password =
+        "Password must be at least 8 characters.";
     }
 
+    // Confirm Password
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password.";
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match.";
+      newErrors.confirmPassword =
+        "Please confirm your password.";
+    } else if (
+      formData.password !== formData.confirmPassword
+    ) {
+      newErrors.confirmPassword =
+        "Passwords do not match.";
     }
 
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  // Register user with Spring Boot backend
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     setSuccessMessage("");
+    setErrors({});
 
     const validationErrors = validate();
-    setErrors(validationErrors);
 
-    // If no errors were found, treat this as a successful demo registration
-    if (Object.keys(validationErrors).length === 0) {
-      // NOTE: This is demo-only. Later this becomes a POST request
-      // to a Spring Boot endpoint like /api/citizens/register
-      console.log("Demo registration data:", formData);
-      setSuccessMessage(
-        "Registration successful! (Demo only — no backend connected yet.)"
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(
+        "http://localhost:8081/api/auth/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: formData.fullName.trim(),
+            email: formData.email.trim(),
+            phone: formData.phone,
+            address: formData.address.trim(),
+            password: formData.password,
+          }),
+        }
       );
+
+      let data = {};
+
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Registration failed."
+        );
+      }
+
+      console.log(
+        "Registration successful:",
+        data
+      );
+
+      setSuccessMessage(
+        "Registration successful! You can now login."
+      );
+
+      // Clear form
       setFormData({
         fullName: "",
         email: "",
@@ -107,6 +212,26 @@ function Registration() {
         password: "",
         confirmPassword: "",
       });
+    } catch (error) {
+      console.error(
+        "Registration error:",
+        error
+      );
+
+      if (error instanceof TypeError) {
+        setErrors({
+          submit:
+            "Unable to connect to the server. Please make sure the Spring Boot backend is running on port 8081.",
+        });
+      } else {
+        setErrors({
+          submit:
+            error.message ||
+            "Registration failed. Please try again.",
+        });
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -116,19 +241,39 @@ function Registration() {
 
       <section className="auth-section">
         <div className="auth-card">
+
           <h1>Citizen Registration</h1>
+
           <p className="auth-subtitle">
-            Create your account to report and track civic issues.
+            Create your account to report and track
+            civic issues.
           </p>
 
+          {/* Success message */}
           {successMessage && (
-            <div className="success-box">{successMessage}</div>
+            <div className="success-box">
+              {successMessage}
+            </div>
           )}
 
-          <form onSubmit={handleSubmit} noValidate>
+          {/* Backend error */}
+          {errors.submit && (
+            <div className="error-text">
+              {errors.submit}
+            </div>
+          )}
+
+          <form
+            onSubmit={handleSubmit}
+            noValidate
+          >
+
             {/* Full Name */}
             <div className="form-group">
-              <label htmlFor="fullName">Full Name</label>
+              <label htmlFor="fullName">
+                Full Name
+              </label>
+
               <input
                 type="text"
                 id="fullName"
@@ -137,14 +282,20 @@ function Registration() {
                 onChange={handleChange}
                 placeholder="e.g. Riya Sharma"
               />
+
               {errors.fullName && (
-                <span className="error-text">{errors.fullName}</span>
+                <span className="error-text">
+                  {errors.fullName}
+                </span>
               )}
             </div>
 
             {/* Email */}
             <div className="form-group">
-              <label htmlFor="email">Email</label>
+              <label htmlFor="email">
+                Email
+              </label>
+
               <input
                 type="email"
                 id="email"
@@ -153,12 +304,20 @@ function Registration() {
                 onChange={handleChange}
                 placeholder="you@example.com"
               />
-              {errors.email && <span className="error-text">{errors.email}</span>}
+
+              {errors.email && (
+                <span className="error-text">
+                  {errors.email}
+                </span>
+              )}
             </div>
 
             {/* Phone */}
             <div className="form-group">
-              <label htmlFor="phone">Phone Number</label>
+              <label htmlFor="phone">
+                Phone Number
+              </label>
+
               <input
                 type="tel"
                 id="phone"
@@ -166,13 +325,23 @@ function Registration() {
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="10-digit mobile number"
+                maxLength={10}
+                inputMode="numeric"
               />
-              {errors.phone && <span className="error-text">{errors.phone}</span>}
+
+              {errors.phone && (
+                <span className="error-text">
+                  {errors.phone}
+                </span>
+              )}
             </div>
 
             {/* Address */}
             <div className="form-group">
-              <label htmlFor="address">Address</label>
+              <label htmlFor="address">
+                Address
+              </label>
+
               <textarea
                 id="address"
                 name="address"
@@ -181,32 +350,50 @@ function Registration() {
                 placeholder="House no., street, city, state"
                 rows="3"
               />
+
               {errors.address && (
-                <span className="error-text">{errors.address}</span>
+                <span className="error-text">
+                  {errors.address}
+                </span>
               )}
             </div>
 
             {/* Password */}
             <div className="form-group">
-              <label htmlFor="password">Password</label>
+              <label htmlFor="password">
+                Password
+              </label>
+
               <div className="password-wrapper">
                 <input
-                  type={showPassword ? "text" : "password"}
+                  type={
+                    showPassword
+                      ? "text"
+                      : "password"
+                  }
                   id="password"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="At least 8 characters"
                 />
+
                 <button
                   type="button"
                   className="toggle-password"
-                  onClick={() => setShowPassword((prev) => !prev)}
+                  onClick={() =>
+                    setShowPassword(
+                      (prev) => !prev
+                    )
+                  }
                 >
-                  {showPassword ? "Hide" : "Show"}
+                  {showPassword
+                    ? "Hide"
+                    : "Show"}
                 </button>
               </div>
 
+              {/* Password strength */}
               {formData.password && (
                 <div className="strength-meter">
                   <div className="strength-bar-bg">
@@ -214,55 +401,99 @@ function Registration() {
                       className="strength-bar-fill"
                       style={{
                         width: `${strength.percent}%`,
-                        backgroundColor: strength.color,
+                        backgroundColor:
+                          strength.color,
                       }}
                     ></div>
                   </div>
-                  <span style={{ color: strength.color }}>{strength.label}</span>
+
+                  <span
+                    style={{
+                      color: strength.color,
+                    }}
+                  >
+                    {strength.label}
+                  </span>
                 </div>
               )}
 
               {errors.password && (
-                <span className="error-text">{errors.password}</span>
+                <span className="error-text">
+                  {errors.password}
+                </span>
               )}
             </div>
 
             {/* Confirm Password */}
             <div className="form-group">
-              <label htmlFor="confirmPassword">Confirm Password</label>
+              <label htmlFor="confirmPassword">
+                Confirm Password
+              </label>
+
               <div className="password-wrapper">
                 <input
-                  type={showConfirmPassword ? "text" : "password"}
+                  type={
+                    showConfirmPassword
+                      ? "text"
+                      : "password"
+                  }
                   id="confirmPassword"
                   name="confirmPassword"
-                  value={formData.confirmPassword}
+                  value={
+                    formData.confirmPassword
+                  }
                   onChange={handleChange}
                   placeholder="Re-enter your password"
                 />
+
                 <button
                   type="button"
                   className="toggle-password"
-                  onClick={() => setShowConfirmPassword((prev) => !prev)}
+                  onClick={() =>
+                    setShowConfirmPassword(
+                      (prev) => !prev
+                    )
+                  }
                 >
-                  {showConfirmPassword ? "Hide" : "Show"}
+                  {showConfirmPassword
+                    ? "Hide"
+                    : "Show"}
                 </button>
               </div>
+
               {errors.confirmPassword && (
-                <span className="error-text">{errors.confirmPassword}</span>
+                <span className="error-text">
+                  {errors.confirmPassword}
+                </span>
               )}
             </div>
 
-            <button type="submit" className="btn-submit">
-              Register
+            {/* Register button */}
+            <button
+              type="submit"
+              className="btn-submit"
+              disabled={isLoading}
+            >
+              {isLoading
+                ? "Registering..."
+                : "Register"}
             </button>
+
           </form>
 
           <p className="auth-footer-text">
-            Already have an account? <Link to="/login">Login here</Link>
+            Already have an account?{" "}
+            <Link to="/login">
+              Login here
+            </Link>
           </p>
+
           <p className="auth-footer-text">
-            <Link to="/">← Back to Home</Link>
+            <Link to="/">
+              ← Back to Home
+            </Link>
           </p>
+
         </div>
       </section>
 
